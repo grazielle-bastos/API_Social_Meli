@@ -1,6 +1,7 @@
 package br.com.meli.api_social_meli.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "user")
@@ -8,9 +9,11 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private int userId;
 
     @Column(name = "user_name")
+    @NotNull
     private String userName;
 
     public User() {
