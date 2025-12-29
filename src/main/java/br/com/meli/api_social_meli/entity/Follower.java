@@ -28,7 +28,6 @@ public class Follower {
 
     public Follower() {
     }
-
     public Follower(Integer followerId, Integer userFollowerId, Integer userToFollowId, LocalDateTime createdAt) {
         this.followerId = followerId;
         this.userFollowerId = userFollowerId;

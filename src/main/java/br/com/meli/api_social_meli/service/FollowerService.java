@@ -1,6 +1,9 @@
 package br.com.meli.api_social_meli.service;
 
+import br.com.meli.api_social_meli.dto.FollowedListResponseDTO;
 import br.com.meli.api_social_meli.dto.FollowersCountResponseDTO;
+import br.com.meli.api_social_meli.dto.FollowersListResponseDTO;
+import br.com.meli.api_social_meli.dto.UserSummaryDTO;
 import br.com.meli.api_social_meli.entity.Follower;
 import br.com.meli.api_social_meli.entity.User;
 import br.com.meli.api_social_meli.repository.FollowerRepository;
@@ -10,11 +13,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class FollowerService {
+    private static final String USER_NOT_FOUND = "User not found";
     private final FollowerRepository followerRepository;
-
     private final UserRepository userRepository;
 
     public FollowerService(FollowerRepository followerRepository, UserRepository userRepository) {
@@ -30,7 +35,7 @@ public class FollowerService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User cannot follow itself");
         }
         if (!userRepository.existsById(userId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND);
         }
         if (!userRepository.existsById(userToFollowId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User to follow not found");
@@ -50,10 +55,54 @@ public class FollowerService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
         }
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
 
         long count = followerRepository.countByUserToFollowId(userId);
 
         return new FollowersCountResponseDTO(user.getUserId(), user.getUserName(), (int) count);
     }
+
+    public FollowersListResponseDTO getFollowersList(Integer userId) {
+        if (userId == null || userId <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+        }
+
+        User seller = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+
+        List<Follower> relations = followerRepository.findByUserToFollowId(userId);
+
+        List<UserSummaryDTO> followers = new ArrayList<>();
+
+        for (Follower relation : relations) {
+            Integer followerId = relation.getUserFollowerId();
+            User followerUser = userRepository.findById(followerId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+            followers.add(new UserSummaryDTO(followerUser.getUserId(), followerUser.getUserName()));
+        }
+        return new FollowersListResponseDTO(seller.getUserId(), seller.getUserName(), followers);
+    }
+
+    public FollowedListResponseDTO getFollowedList(Integer userId) {
+        if (userId == null || userId <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+
+        List<Follower> relations = followerRepository.findByUserFollowerId(userId);
+
+        List<UserSummaryDTO> followed = new ArrayList<>();
+
+        for (Follower relation : relations) {
+            Integer followedId = relation.getUserToFollowId();
+            User followedUser = userRepository.findById(followedId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+            followed.add(new UserSummaryDTO(followedUser.getUserId(), followedUser.getUserName()));
+        }
+
+        return new FollowedListResponseDTO(user.getUserId(), user.getUserName(), followed);
+    }
 }
+

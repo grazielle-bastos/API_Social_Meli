@@ -1,6 +1,8 @@
 package br.com.meli.api_social_meli.controller;
 
+import br.com.meli.api_social_meli.dto.FollowedListResponseDTO;
 import br.com.meli.api_social_meli.dto.FollowersCountResponseDTO;
+import br.com.meli.api_social_meli.dto.FollowersListResponseDTO;
 import br.com.meli.api_social_meli.entity.Follower;
 import br.com.meli.api_social_meli.service.FollowerService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,10 +27,21 @@ public class FollowerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdFollower);
     }
 
-    @GetMapping("/{userId}/followers/count/")
+    @GetMapping("/{userId}/followers/count")
     public ResponseEntity<FollowersCountResponseDTO> getFollowersCount(@PathVariable Integer userId) {
         FollowersCountResponseDTO followersCountResponseDTO = followerService.getFollowersCount(userId);
         return ResponseEntity.status(HttpStatus.OK).body(followersCountResponseDTO);
+    }
+
+    @GetMapping("/{userId}/followers/list")
+    public ResponseEntity<FollowersListResponseDTO> getFollowersList(@PathVariable Integer userId) {
+        FollowersListResponseDTO followersListResponseDTO = followerService.getFollowersList(userId);
+        return ResponseEntity.status(HttpStatus.OK).body(followersListResponseDTO);
+    }
+
+    @GetMapping("/{userId}/followed/list")
+    public ResponseEntity<FollowedListResponseDTO> getFollowedList(@PathVariable Integer userId) {
+        return ResponseEntity.status(HttpStatus.OK).body(followerService.getFollowedList(userId));
     }
 
 }
