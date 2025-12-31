@@ -1,54 +1,43 @@
-package br.com.meli.api_social_meli.entity;
+package br.com.meli.api_social_meli.dto;
 
-import jakarta.persistence.*;
+import br.com.meli.api_social_meli.entity.Product;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDate;
 
-@Entity
-@Table(name = "post")
-public class Post {
+public class PublishPostRequestDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "post_id")
-    private Integer postId;
-
-    @Column(name = "user_id")
+    @NotNull
     @Positive
     private Integer userId;
 
-    @Column(name = "date")
+    @NotNull
+    @JsonFormat(pattern = "dd-MM-yyyy")
     private LocalDate date;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "product_id", referencedColumnName = "product_id")
-    private Product product;
+    @Valid
+    @NotNull
+    private ProductRequestDTO product;
 
-    @Column(name = "category")
+    @NotNull
     private Integer category;
 
-    @Column(name = "price")
+    @NotNull
+    @Positive
     private Double price;
 
-    public Post() {
+    public PublishPostRequestDTO() {
     }
 
-    public Post(Integer postId, Integer userId, LocalDate date, Product product, Integer category, Double price) {
-        this.postId = postId;
+    public PublishPostRequestDTO(Integer userId, LocalDate date, ProductRequestDTO product, Integer category, Double price) {
         this.userId = userId;
         this.date = date;
         this.product = product;
         this.category = category;
         this.price = price;
-    }
-
-    public Integer getPostId() {
-        return postId;
-    }
-
-    public void setPostId(Integer postId) {
-        this.postId = postId;
     }
 
     public Integer getUserId() {
@@ -67,11 +56,11 @@ public class Post {
         this.date = date;
     }
 
-    public Product getProduct() {
+    public ProductRequestDTO getProduct() {
         return product;
     }
 
-    public void setProduct(Product product) {
+    public void setProduct(ProductRequestDTO product) {
         this.product = product;
     }
 
@@ -90,4 +79,5 @@ public class Post {
     public void setPrice(Double price) {
         this.price = price;
     }
+
 }

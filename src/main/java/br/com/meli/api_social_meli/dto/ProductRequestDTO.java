@@ -1,39 +1,25 @@
-package br.com.meli.api_social_meli.entity;
+package br.com.meli.api_social_meli.dto;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 
-@Entity
-@Table(name = "product")
-public class Product {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_id")
-    @Positive
+public class ProductRequestDTO {
+
     private Integer productId;
 
-    @Column(name = "product_name")
     @NotBlank
     private String productName;
 
-    @Column(name = "type")
     @NotBlank
     private String type;
 
-    @Column(name = "brand")
     private String brand;
-
-    @Column(name = "color")
     private String color;
-
-    @Column(name = "notes")
     private String notes;
 
-    public Product() {
+    public ProductRequestDTO() {
     }
 
-    public Product(Integer productId, String productName, String type, String brand, String color, String notes) {
+    public ProductRequestDTO(Integer productId, String productName, String type, String brand, String color, String notes) {
         this.productId = productId;
         this.productName = productName;
         this.type = type;
