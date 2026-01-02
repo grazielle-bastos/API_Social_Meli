@@ -1,6 +1,5 @@
-package br.com.meli.api_social_meli.dto;
+package br.com.meli.api_social_meli.dto.request;
 
-import br.com.meli.api_social_meli.entity.Product;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

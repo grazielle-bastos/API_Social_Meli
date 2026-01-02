@@ -1,25 +1,27 @@
-package br.com.meli.api_social_meli.dto;
+package br.com.meli.api_social_meli.dto.response;
 
-import jakarta.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class ProductRequestDTO {
+public class ProductResponseDTO {
 
+    @JsonProperty("product_id")
     private Integer productId;
 
-    @NotBlank
+    @JsonProperty("product_name")
     private String productName;
 
-    @NotBlank
     private String type;
 
     private String brand;
+
     private String color;
+
     private String notes;
 
-    public ProductRequestDTO() {
+    public ProductResponseDTO() {
     }
 
-    public ProductRequestDTO(Integer productId, String productName, String type, String brand, String color, String notes) {
+    public ProductResponseDTO(Integer productId, String productName, String type, String brand, String color, String notes) {
         this.productId = productId;
         this.productName = productName;
         this.type = type;
@@ -75,4 +77,5 @@ public class ProductRequestDTO {
     public void setNotes(String notes) {
         this.notes = notes;
     }
+
 }

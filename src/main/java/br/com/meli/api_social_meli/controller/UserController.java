@@ -1,6 +1,6 @@
 package br.com.meli.api_social_meli.controller;
 
-import br.com.meli.api_social_meli.dto.UserCreateRequestDTO;
+import br.com.meli.api_social_meli.dto.request.UserCreateRequestDTO;
 import br.com.meli.api_social_meli.entity.User;
 import br.com.meli.api_social_meli.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;

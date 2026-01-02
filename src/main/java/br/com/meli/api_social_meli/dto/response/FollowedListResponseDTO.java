@@ -1,4 +1,4 @@
-package br.com.meli.api_social_meli.dto;
+package br.com.meli.api_social_meli.dto.response;
 
 import java.util.List;
 

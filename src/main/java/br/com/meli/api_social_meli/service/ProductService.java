@@ -1,7 +1,7 @@
 package br.com.meli.api_social_meli.service;
 
-import br.com.meli.api_social_meli.dto.ProductRequestDTO;
-import br.com.meli.api_social_meli.dto.PublishPostRequestDTO;
+import br.com.meli.api_social_meli.dto.request.ProductRequestDTO;
+import br.com.meli.api_social_meli.dto.request.PublishPostRequestDTO;
 import br.com.meli.api_social_meli.entity.Post;
 import br.com.meli.api_social_meli.entity.Product;
 import br.com.meli.api_social_meli.repository.PostRepository;

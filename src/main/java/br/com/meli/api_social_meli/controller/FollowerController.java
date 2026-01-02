@@ -1,8 +1,8 @@
 package br.com.meli.api_social_meli.controller;
 
-import br.com.meli.api_social_meli.dto.FollowedListResponseDTO;
-import br.com.meli.api_social_meli.dto.FollowersCountResponseDTO;
-import br.com.meli.api_social_meli.dto.FollowersListResponseDTO;
+import br.com.meli.api_social_meli.dto.response.FollowedListResponseDTO;
+import br.com.meli.api_social_meli.dto.response.FollowersCountResponseDTO;
+import br.com.meli.api_social_meli.dto.response.FollowersListResponseDTO;
 import br.com.meli.api_social_meli.entity.Follower;
 import br.com.meli.api_social_meli.service.FollowerService;
 import io.swagger.v3.oas.annotations.tags.Tag;

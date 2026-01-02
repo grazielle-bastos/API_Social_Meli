@@ -1,6 +1,9 @@
-package br.com.meli.api_social_meli.dto;
+package br.com.meli.api_social_meli.dto.request;
+
+import jakarta.validation.constraints.NotNull;
 
 public class UserCreateRequestDTO {
+    @NotNull
     private String userName;
 
     public UserCreateRequestDTO() {
