@@ -44,7 +44,9 @@ public class FollowerController {
             @Parameter(name = "userToFollowId", description = "ID do usuário que será seguido", example = "2", required = true)
     })
     @PostMapping("/{userId}/follow/{userToFollowId}")
-    public ResponseEntity<Follower> follow(@PathVariable Integer userId, @PathVariable Integer userToFollowId) {
+    public ResponseEntity<Follower> follow(
+            @PathVariable Integer userId,
+            @PathVariable Integer userToFollowId) {
         Follower createdFollower = followerService.follow(userId, userToFollowId);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdFollower);
     }
@@ -72,9 +74,11 @@ public class FollowerController {
     })
     @Parameter(name = "userId", description = "ID do usuário (seller)", example = "10", required = true)
     @GetMapping("/{userId}/followers/list")
-    public ResponseEntity<FollowersListResponseDTO> getFollowersList(@PathVariable Integer userId) {
-        FollowersListResponseDTO followersListResponseDTO = followerService.getFollowersList(userId);
-        return ResponseEntity.status(HttpStatus.OK).body(followersListResponseDTO);
+    public ResponseEntity<FollowersListResponseDTO> getFollowersList(
+            @PathVariable Integer userId,
+            @RequestParam(value = "order", required = false)
+            @Parameter(description = "Ordenação alfabética opcional: 'name_asc' para A-Z ou 'name_desc' para Z-A", example = "name_asc") String order) {
+        return ResponseEntity.status(HttpStatus.OK).body(followerService.getFollowersList(userId, order));
     }
 
     @Operation(summary = "Lista usuários seguidos", description = "Retorna todos os usuários que o userId segue.")
@@ -86,8 +90,31 @@ public class FollowerController {
     })
     @Parameter(name = "userId", description = "ID do usuário seguidor", example = "5", required = true)
     @GetMapping("/{userId}/followed/list")
-    public ResponseEntity<FollowedListResponseDTO> getFollowedList(@PathVariable Integer userId) {
-        return ResponseEntity.status(HttpStatus.OK).body(followerService.getFollowedList(userId));
+    public ResponseEntity<FollowedListResponseDTO> getFollowedList(
+            @PathVariable Integer userId,
+            @RequestParam(value = "order", required = false)
+            @Parameter(description = "Ordenação alfabética opcional: 'name_asc' para A-Z ou 'name_desc' para Z-A", example = "name_asc") String order) {
+        return ResponseEntity.status(HttpStatus.OK).body(followerService.getFollowedList(userId, order));
     }
 
+    @Operation(
+            summary = "Permite que um usuário deixe de seguir outro",
+            description = "Remove a relação de follow entre userId (seguidor) e userIdToUnfollow (seguido)."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Unfollow realizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "IDs inválidos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Usuário ou relacionamento não encontrado", content = @Content)
+    })
+    @Parameters({
+            @Parameter(name = "userId", description = "ID do seguidor", example = "1", required = true),
+            @Parameter(name = "userIdToUnfollow", description = "ID do usuário a ser deixado de seguir", example = "2", required = true)
+    })
+    @PostMapping("/{userId}/unfollow/{userIdToUnfollow}")
+    public ResponseEntity<Void> unfollow(
+            @PathVariable Integer userId,
+            @PathVariable Integer userIdToUnfollow) {
+        followerService.unfollow(userId, userIdToUnfollow);
+        return ResponseEntity.noContent().build();
+    }
 }

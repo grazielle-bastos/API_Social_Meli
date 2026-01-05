@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -62,7 +63,7 @@ public class FollowerService {
         return new FollowersCountResponseDTO(user.getUserId(), user.getUserName(), (int) count);
     }
 
-    public FollowersListResponseDTO getFollowersList(Integer userId) {
+    public FollowersListResponseDTO getFollowersList(Integer userId, String order) {
         if (userId == null || userId <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
         }
@@ -80,10 +81,16 @@ public class FollowerService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
             followers.add(new UserSummaryDTO(followerUser.getUserId(), followerUser.getUserName()));
         }
+
+        Comparator<UserSummaryDTO> comparator = buildComparator(order);
+        if (comparator == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid order parameter. Use 'name_asc' or 'name_desc'.");
+        }
+        followers.sort(comparator);
         return new FollowersListResponseDTO(seller.getUserId(), seller.getUserName(), followers);
     }
 
-    public FollowedListResponseDTO getFollowedList(Integer userId) {
+    public FollowedListResponseDTO getFollowedList(Integer userId, String order) {
         if (userId == null || userId <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
         }
@@ -102,7 +109,56 @@ public class FollowerService {
             followed.add(new UserSummaryDTO(followedUser.getUserId(), followedUser.getUserName()));
         }
 
+        Comparator<UserSummaryDTO> comparator = buildComparator(order);
+        if (comparator == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid order parameter. Use 'name_asc' or 'name_desc'.");
+        }
+        followed.sort(comparator);
+
         return new FollowedListResponseDTO(user.getUserId(), user.getUserName(), followed);
+    }
+
+    public void unfollow(Integer userId, Integer userIdToUnfollow) {
+        if (userId == null || userId <= 0 || userIdToUnfollow == null || userIdToUnfollow <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+        }
+        if (userId.equals(userIdToUnfollow)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User cannot unfollow itself");
+        }
+        if (!userRepository.existsById(userId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND);
+        }
+        if (!userRepository.existsById(userIdToUnfollow)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User to unfollow not found");
+        }
+
+        Follower relation = followerRepository
+                .findByUserFollowerIdAndUserToFollowId(userId, userIdToUnfollow)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Follow relationship not found"));
+
+        followerRepository.delete(relation);
+    }
+
+    private Comparator<UserSummaryDTO> buildComparator(String order) {
+        String normalizedOrder = normalizeOrder(order);
+        if (normalizedOrder == null) {
+            return null;
+        }
+
+        Comparator<UserSummaryDTO> comparator =
+                Comparator.comparing(UserSummaryDTO::getUserName, String.CASE_INSENSITIVE_ORDER);
+
+        return normalizedOrder.equals("name_desc") ? comparator.reversed() : comparator;
+    }
+
+    private String normalizeOrder(String order) {
+        if (order == null) {
+            return null;
+        }
+        if ("name_asc".equals(order) || "name_desc".equals(order)) {
+            return order;
+        }
+        return null;
     }
 }
 
