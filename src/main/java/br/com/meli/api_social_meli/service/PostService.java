@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -27,7 +28,7 @@ public class PostService {
         this.followerRepository = followerRepository;
     }
 
-    public FollowedPostResponseDTO getFollowedPostsLastTwoWeeks(Integer userId) {
+    public FollowedPostResponseDTO getFollowedPostsLastTwoWeeks(Integer userId, String order) {
         if (userId == null || userId <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
         }
@@ -47,6 +48,14 @@ public class PostService {
         List<PostResponseDTO> postDTOs = posts.stream()
                 .map(this::mapToPostResponseDTO)
                 .toList();
+
+        Comparator<PostResponseDTO> comparator = buildComparator(order);
+        if (comparator == null && order != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid order parameter. Use 'date_asc' or 'date_desc'.");
+        }
+        if (comparator != null) {
+            postDTOs = postDTOs.stream().sorted(comparator).toList();
+        }
 
         return new FollowedPostResponseDTO(userId, postDTOs);
     }
@@ -71,4 +80,25 @@ public class PostService {
         );
     }
 
+    private String normalizeOrder(String order) {
+        if (order == null) {
+            return null;
+        }
+        if ("date_asc".equals(order) || "date_desc".equals(order)) {
+            return order;
+        }
+        return null;
+    }
+
+    private Comparator<PostResponseDTO> buildComparator(String order) {
+        String normalizedOrder = normalizeOrder(order);
+        if (normalizedOrder == null) {
+            return null;
+        }
+
+        Comparator<PostResponseDTO> comparator =
+                Comparator.comparing(PostResponseDTO::getDate);
+
+        return normalizedOrder.equals("date_desc") ? comparator.reversed() : comparator;
+    }
 }

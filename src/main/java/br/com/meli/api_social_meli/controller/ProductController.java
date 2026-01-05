@@ -54,7 +54,7 @@ public class ProductController {
 
     @Operation(
             summary = "Lista posts de vendedores seguidos nas últimas duas semanas",
-            description = "Retorna os posts mais recentes (até 2 semanas) publicados pelos fornecedores que o usuário segue, ordenados por data desc."
+            description = "Retorna os posts publicados pelos fornecedores que o usuário segue nas últimas duas semanas. Ordenação opcional por data: 'date_asc' (crescente, mais antiga primeiro) ou 'date_desc' (decrescente, mais recente primeiro). Padrão: date_desc."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
@@ -62,14 +62,17 @@ public class ProductController {
                             mediaType = "application/json",
                             schema = @Schema(implementation = FollowedPostResponseDTO.class)
                     )),
-            @ApiResponse(responseCode = "400", description = "Parâmetro userId inválido", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Parâmetro userId inválido ou order inválido", content = @Content)
     })
     @Parameters({
-            @Parameter(name = "userId", description = "ID do usuário que segue fornecedores", example = "4698", required = true)
+            @Parameter(name = "userId", description = "ID do usuário que segue fornecedores", example = "4698", required = true),
+            @Parameter(name = "order", description = "Ordenação por data: 'date_asc' ou 'date_desc'. Opcional.", example = "date_desc", required = false)
     })
     @GetMapping("/followed/{userId}/list")
-    public ResponseEntity<FollowedPostResponseDTO> getFollowedPosts(@PathVariable Integer userId) {
-        return ResponseEntity.ok(postService.getFollowedPostsLastTwoWeeks(userId));
+    public ResponseEntity<FollowedPostResponseDTO> getFollowedPosts(
+            @PathVariable Integer userId,
+            @RequestParam(value = "order", required = false) String order) {
+        return ResponseEntity.ok(postService.getFollowedPostsLastTwoWeeks(userId, order));
     }
 
 }
