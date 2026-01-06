@@ -2,7 +2,7 @@ package br.com.meli.api_social_meli.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class ProductRequestDTO {
+public class    ProductRequestDTO {
     private Integer productId;
 
     @NotBlank

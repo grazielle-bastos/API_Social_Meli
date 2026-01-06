@@ -51,7 +51,7 @@ public class FollowerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdFollower);
     }
 
-    @Operation(summary = "Lista seguidores de um usuário", description = "Retorna detalhamento de todos os seguidores do userId informado.")
+    @Operation(summary = "Contagem de seguidores de um usuário", description = "Retorna a contagem de todos os seguidores do userId informado.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista retornada",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = FollowersListResponseDTO.class))),

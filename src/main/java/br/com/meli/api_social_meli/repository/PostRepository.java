@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Integer> {
     List<Post> findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(List<Integer> userIds, LocalDate startDate);
+
+    int countByUserIdAndHasPromoTrue(Integer userId);
 }

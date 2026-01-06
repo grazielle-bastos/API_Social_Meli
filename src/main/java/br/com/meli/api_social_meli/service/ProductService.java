@@ -3,10 +3,13 @@ package br.com.meli.api_social_meli.service;
 import br.com.meli.api_social_meli.dto.request.ProductRequestDTO;
 import br.com.meli.api_social_meli.dto.request.PromoPostRequestDTO;
 import br.com.meli.api_social_meli.dto.request.PublishPostRequestDTO;
+import br.com.meli.api_social_meli.dto.response.PromoProductsCountDTO;
 import br.com.meli.api_social_meli.entity.Post;
 import br.com.meli.api_social_meli.entity.Product;
+import br.com.meli.api_social_meli.entity.User;
 import br.com.meli.api_social_meli.repository.PostRepository;
 import br.com.meli.api_social_meli.repository.ProductRepository;
+import br.com.meli.api_social_meli.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,10 +21,12 @@ public class ProductService {
 
     private final PostRepository postRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
-    public ProductService(PostRepository postRepository, ProductRepository productRepository) {
+    public ProductService(PostRepository postRepository, ProductRepository productRepository, UserRepository userRepository) {
         this.postRepository = postRepository;
         this.productRepository = productRepository;
+        this.userRepository = userRepository;
     }
 
     public Post publishPost(PublishPostRequestDTO publishPostRequestDTO) {
@@ -92,5 +97,14 @@ public class ProductService {
         post.setDiscount(promoPostRequestDTO.getDiscount());
 
         return postRepository.save(post);
+    }
+
+    public PromoProductsCountDTO getPromoProductsCount(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        int count = postRepository.countByUserIdAndHasPromoTrue(userId);
+
+        return new PromoProductsCountDTO(userId, user.getUserName(), count);
     }
 }

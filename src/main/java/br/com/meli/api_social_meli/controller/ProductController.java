@@ -3,6 +3,7 @@ package br.com.meli.api_social_meli.controller;
 import br.com.meli.api_social_meli.dto.request.PromoPostRequestDTO;
 import br.com.meli.api_social_meli.dto.request.PublishPostRequestDTO;
 import br.com.meli.api_social_meli.dto.response.FollowedPostResponseDTO;
+import br.com.meli.api_social_meli.dto.response.PromoProductsCountDTO;
 import br.com.meli.api_social_meli.entity.Post;
 import br.com.meli.api_social_meli.service.PostService;
 import br.com.meli.api_social_meli.service.ProductService;
@@ -91,6 +92,23 @@ public class ProductController {
     @PostMapping("/promo-pub")
     public ResponseEntity<Post> publishPromoPost(@Valid @RequestBody PromoPostRequestDTO promoPostRequestDTO) {
         return ResponseEntity.status(HttpStatus.OK).body(productService.publishPromoPost(promoPostRequestDTO));
+    }
+
+    @Operation(
+            summary = "Conta produtos promocionais de um vendedor",
+            description = "Retorna a quantidade de produtos em promoção para um determinado vendedor."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Contagem realizada com sucesso",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PromoProductsCountDTO.class)
+                    )),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content)
+    })
+    @GetMapping("/promo-pub/count")
+    public ResponseEntity<PromoProductsCountDTO> getPromoProductsCount(@RequestParam(name = "user_id") Integer userId) {
+        return ResponseEntity.status(HttpStatus.OK).body(productService.getPromoProductsCount(userId));
     }
 
 }
