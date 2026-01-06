@@ -12,7 +12,7 @@ public class PostResponseDTO {
     @JsonProperty("post_id")
     private Integer postId;
 
-    @JsonFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
 
     private ProductResponseDTO product;

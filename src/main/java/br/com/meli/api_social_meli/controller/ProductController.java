@@ -1,5 +1,6 @@
 package br.com.meli.api_social_meli.controller;
 
+import br.com.meli.api_social_meli.dto.request.PromoPostRequestDTO;
 import br.com.meli.api_social_meli.dto.request.PublishPostRequestDTO;
 import br.com.meli.api_social_meli.dto.response.FollowedPostResponseDTO;
 import br.com.meli.api_social_meli.entity.Post;
@@ -72,7 +73,24 @@ public class ProductController {
     public ResponseEntity<FollowedPostResponseDTO> getFollowedPosts(
             @PathVariable Integer userId,
             @RequestParam(value = "order", required = false) String order) {
-        return ResponseEntity.ok(postService.getFollowedPostsLastTwoWeeks(userId, order));
+        return ResponseEntity.status(HttpStatus.OK).body(postService.getFollowedPostsLastTwoWeeks(userId, order));
+    }
+
+    @Operation(
+            summary = "Registra uma nova publicação promocional",
+            description = "Cria um post promocional para o seller informado no payload, com desconto."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Post promocional criado com sucesso",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Post.class)
+                    )),
+            @ApiResponse(responseCode = "400", description = "Payload inválido", content = @Content)
+    })
+    @PostMapping("/promo-pub")
+    public ResponseEntity<Post> publishPromoPost(@Valid @RequestBody PromoPostRequestDTO promoPostRequestDTO) {
+        return ResponseEntity.status(HttpStatus.OK).body(productService.publishPromoPost(promoPostRequestDTO));
     }
 
 }

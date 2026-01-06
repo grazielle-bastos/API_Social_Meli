@@ -1,6 +1,7 @@
 package br.com.meli.api_social_meli.service;
 
 import br.com.meli.api_social_meli.dto.request.ProductRequestDTO;
+import br.com.meli.api_social_meli.dto.request.PromoPostRequestDTO;
 import br.com.meli.api_social_meli.dto.request.PublishPostRequestDTO;
 import br.com.meli.api_social_meli.entity.Post;
 import br.com.meli.api_social_meli.entity.Product;
@@ -52,7 +53,44 @@ public class ProductService {
         post.setCategory(publishPostRequestDTO.getCategory());
         post.setPrice(publishPostRequestDTO.getPrice());
 
-        Post saved = postRepository.save(post);
-        return saved;
+        return postRepository.save(post);
+    }
+
+    public Post publishPromoPost(PromoPostRequestDTO promoPostRequestDTO) {
+        if (promoPostRequestDTO.getUserId() == null || promoPostRequestDTO.getUserId() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+        } else if (promoPostRequestDTO.getDate() == null || promoPostRequestDTO.getDate().isBefore(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Date is required and must be today or in the future");
+        } else if (promoPostRequestDTO.getProduct() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product is required");
+        } else if (promoPostRequestDTO.getCategory() == null || promoPostRequestDTO.getCategory() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category is required and must be greater than zero");
+        } else if (promoPostRequestDTO.getPrice() == null || promoPostRequestDTO.getPrice() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Price is required and must be greater than zero");
+        } else if (promoPostRequestDTO.getHasPromo() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Has Promo is required");
+        } else if (promoPostRequestDTO.getDiscount() == null || promoPostRequestDTO.getDiscount() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Discount is required and must be greater than zero");
+        }
+
+        ProductRequestDTO productRequestDTO = promoPostRequestDTO.getProduct();
+
+        Product product = new Product();
+        product.setProductName(productRequestDTO.getProductName());
+        product.setType(productRequestDTO.getType());
+        product.setBrand(productRequestDTO.getBrand());
+        product.setColor(productRequestDTO.getColor());
+        product.setNotes(productRequestDTO.getNotes());
+
+        Post post = new Post();
+        post.setUserId(promoPostRequestDTO.getUserId());
+        post.setDate(promoPostRequestDTO.getDate());
+        post.setProduct(product);
+        post.setCategory(promoPostRequestDTO.getCategory());
+        post.setPrice(promoPostRequestDTO.getPrice());
+        post.setHasPromo(promoPostRequestDTO.getHasPromo());
+        post.setDiscount(promoPostRequestDTO.getDiscount());
+
+        return postRepository.save(post);
     }
 }

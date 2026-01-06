@@ -31,16 +31,24 @@ public class Post {
     @Column(name = "price")
     private Double price;
 
+    @Column(name = "has_promo")
+    private Boolean hasPromo;
+
+    @Column(name = "discount")
+    private Double discount;
+
     public Post() {
     }
 
-    public Post(Integer postId, Integer userId, LocalDate date, Product product, Integer category, Double price) {
+    public Post(Integer postId, Integer userId, LocalDate date, Product product, Integer category, Double price, Boolean hasPromo, Double discount) {
         this.postId = postId;
         this.userId = userId;
         this.date = date;
         this.product = product;
         this.category = category;
         this.price = price;
+        this.hasPromo = hasPromo;
+        this.discount = discount;
     }
 
     public Integer getPostId() {
@@ -89,5 +97,21 @@ public class Post {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Boolean getHasPromo() {
+        return hasPromo;
+    }
+
+    public void setHasPromo(Boolean hasPromo) {
+        this.hasPromo = hasPromo;
+    }
+
+    public Double getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(Double discount) {
+        this.discount = discount;
     }
 }
