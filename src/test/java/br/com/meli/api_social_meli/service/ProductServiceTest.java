@@ -1,4 +1,4 @@
-package br.com.meli.api_social_meli;
+package br.com.meli.api_social_meli.service;
 
 import br.com.meli.api_social_meli.dto.request.ProductRequestDTO;
 import br.com.meli.api_social_meli.dto.request.PromoPostRequestDTO;
@@ -10,7 +10,6 @@ import br.com.meli.api_social_meli.entity.User;
 import br.com.meli.api_social_meli.repository.PostRepository;
 import br.com.meli.api_social_meli.repository.ProductRepository;
 import br.com.meli.api_social_meli.repository.UserRepository;
-import br.com.meli.api_social_meli.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
