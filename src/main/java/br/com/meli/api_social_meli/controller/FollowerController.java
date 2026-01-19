@@ -1,5 +1,6 @@
 package br.com.meli.api_social_meli.controller;
 
+import br.com.meli.api_social_meli.dto.response.FollowResponseDTO;
 import br.com.meli.api_social_meli.dto.response.FollowedListResponseDTO;
 import br.com.meli.api_social_meli.dto.response.FollowersCountResponseDTO;
 import br.com.meli.api_social_meli.dto.response.FollowersListResponseDTO;
@@ -34,7 +35,7 @@ public class FollowerController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Follow criado",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Follower.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = FollowResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "IDs inválidos ou usuário tentando seguir a si mesmo", content = @Content),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content),
             @ApiResponse(responseCode = "409", description = "Follow já existe", content = @Content)
@@ -44,17 +45,18 @@ public class FollowerController {
             @Parameter(name = "userToFollowId", description = "ID do usuário que será seguido", example = "2", required = true)
     })
     @PostMapping("/{userId}/follow/{userToFollowId}")
-    public ResponseEntity<Follower> follow(
+    public ResponseEntity<FollowResponseDTO> follow(
             @PathVariable Integer userId,
             @PathVariable Integer userToFollowId) {
         Follower createdFollower = followerService.follow(userId, userToFollowId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdFollower);
+        FollowResponseDTO followResponseDTO = new FollowResponseDTO(createdFollower);
+        return ResponseEntity.status(HttpStatus.CREATED).body(followResponseDTO);
     }
 
     @Operation(summary = "Contagem de seguidores de um usuário", description = "Retorna a contagem de todos os seguidores do userId informado.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista retornada",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = FollowersListResponseDTO.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = FollowersCountResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Parâmetro inválido", content = @Content),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content)
     })
@@ -115,6 +117,6 @@ public class FollowerController {
             @PathVariable Integer userId,
             @PathVariable Integer userIdToUnfollow) {
         followerService.unfollow(userId, userIdToUnfollow);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

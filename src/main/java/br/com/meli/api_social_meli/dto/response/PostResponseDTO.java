@@ -1,5 +1,6 @@
 package br.com.meli.api_social_meli.dto.response;
 
+import br.com.meli.api_social_meli.entity.Post;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -79,5 +80,25 @@ public class PostResponseDTO {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public static PostResponseDTO fromEntity(Post post) {
+        ProductResponseDTO productDTO = new ProductResponseDTO(
+                post.getProduct().getProductId(),
+                post.getProduct().getProductName(),
+                post.getProduct().getType(),
+                post.getProduct().getBrand(),
+                post.getProduct().getColor(),
+                post.getProduct().getNotes()
+        );
+        
+        return new PostResponseDTO(
+                post.getUserId(),
+                post.getPostId(),
+                post.getDate(),
+                productDTO,
+                post.getCategory(),
+                post.getPrice()
+        );
     }
 }

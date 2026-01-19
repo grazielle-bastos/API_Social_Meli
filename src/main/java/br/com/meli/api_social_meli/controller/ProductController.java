@@ -3,6 +3,8 @@ package br.com.meli.api_social_meli.controller;
 import br.com.meli.api_social_meli.dto.request.PromoPostRequestDTO;
 import br.com.meli.api_social_meli.dto.request.PublishPostRequestDTO;
 import br.com.meli.api_social_meli.dto.response.FollowedPostResponseDTO;
+import br.com.meli.api_social_meli.dto.response.PostResponseDTO;
+import br.com.meli.api_social_meli.dto.response.PromoPostResponseDTO;
 import br.com.meli.api_social_meli.dto.response.PromoProductsCountDTO;
 import br.com.meli.api_social_meli.entity.Post;
 import br.com.meli.api_social_meli.service.PostService;
@@ -45,13 +47,15 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "Post criado com sucesso",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = Post.class)
+                            schema = @Schema(implementation = PostResponseDTO.class)
                     )),
             @ApiResponse(responseCode = "400", description = "Payload inválido", content = @Content)
     })
     @PostMapping("/publish")
-    public ResponseEntity<Post> publishPost(@Valid @RequestBody PublishPostRequestDTO publishPostRequestDTO) {
-        return ResponseEntity.status(HttpStatus.OK).body(productService.publishPost(publishPostRequestDTO));
+    public ResponseEntity<PostResponseDTO> publishPost(@Valid @RequestBody PublishPostRequestDTO publishPostRequestDTO) {
+        Post createdPost = productService.publishPost(publishPostRequestDTO);
+        PostResponseDTO responseDTO = PostResponseDTO.fromEntity(createdPost);
+        return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
     }
 
     @Operation(
@@ -85,13 +89,15 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "Post promocional criado com sucesso",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = Post.class)
+                            schema = @Schema(implementation = PromoPostResponseDTO.class)
                     )),
             @ApiResponse(responseCode = "400", description = "Payload inválido", content = @Content)
     })
     @PostMapping("/promo-pub")
-    public ResponseEntity<Post> publishPromoPost(@Valid @RequestBody PromoPostRequestDTO promoPostRequestDTO) {
-        return ResponseEntity.status(HttpStatus.OK).body(productService.publishPromoPost(promoPostRequestDTO));
+    public ResponseEntity<PromoPostResponseDTO> publishPromoPost(@Valid @RequestBody PromoPostRequestDTO promoPostRequestDTO) {
+        Post createdPost = productService.publishPromoPost(promoPostRequestDTO);
+        PromoPostResponseDTO responseDTO = PromoPostResponseDTO.fromEntity(createdPost);
+        return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
     }
 
     @Operation(

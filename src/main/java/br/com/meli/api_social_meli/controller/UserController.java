@@ -1,6 +1,7 @@
 package br.com.meli.api_social_meli.controller;
 
 import br.com.meli.api_social_meli.dto.request.UserCreateRequestDTO;
+import br.com.meli.api_social_meli.dto.response.UserResponseDTO;
 import br.com.meli.api_social_meli.entity.User;
 import br.com.meli.api_social_meli.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
@@ -37,12 +39,16 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = User.class))
+                            array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class))
                     ))
     })
     @GetMapping
-    public ResponseEntity<List<User>> listAll() {
-        return ResponseEntity.ok(userService.listAll());
+    public ResponseEntity<List<UserResponseDTO>> listAll() {
+        List<User> users = userService.listAll();
+        List<UserResponseDTO> userDTOs = users.stream()
+                .map(user -> new UserResponseDTO(user))
+                .collect(Collectors.toList());
+        return ResponseEntity.status(HttpStatus.OK).body(userDTOs);
     }
 
     @Operation(
@@ -52,13 +58,15 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Usuário encontrado",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = User.class))),
+                            schema = @Schema(implementation = UserResponseDTO.class))),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content)
     })
     @Parameter(name = "userId", description = "ID do usuário", example = "1", required = true)
     @GetMapping("/{userId}")
-    public ResponseEntity<User> getUserById(@PathVariable Integer userId) {
-        return ResponseEntity.ok(userService.getUserById(userId));
+    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Integer userId) {
+        User user = userService.getUserById(userId);
+        UserResponseDTO userDTO = new UserResponseDTO(user);
+        return ResponseEntity.status(HttpStatus.OK).body(userDTO);
     }
 
     @Operation(
@@ -68,17 +76,14 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Usuário criado",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = User.class))),
+                            schema = @Schema(implementation = UserResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Payload inválido", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<User> userCreate(@Valid @RequestBody UserCreateRequestDTO userCreateRequestDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.userCreate(userCreateRequestDTO));
+    public ResponseEntity<UserResponseDTO> userCreate(@Valid @RequestBody UserCreateRequestDTO userCreateRequestDTO) {
+        User createdUser = userService.userCreate(userCreateRequestDTO);
+        UserResponseDTO userDTO = new UserResponseDTO(createdUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userDTO);
     }
 
 }
-
-
-
-
-
