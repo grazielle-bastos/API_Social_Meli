@@ -10,7 +10,6 @@ import br.com.meli.api_social_meli.entity.User;
 import br.com.meli.api_social_meli.exception.BadRequestException;
 import br.com.meli.api_social_meli.exception.ResourceNotFoundException;
 import br.com.meli.api_social_meli.repository.PostRepository;
-import br.com.meli.api_social_meli.repository.ProductRepository;
 import br.com.meli.api_social_meli.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +19,10 @@ import java.time.LocalDate;
 public class ProductService {
 
     private final PostRepository postRepository;
-    private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
-    public ProductService(PostRepository postRepository, ProductRepository productRepository, UserRepository userRepository) {
+    public ProductService(PostRepository postRepository, UserRepository userRepository) {
         this.postRepository = postRepository;
-        this.productRepository = productRepository;
         this.userRepository = userRepository;
     }
 
