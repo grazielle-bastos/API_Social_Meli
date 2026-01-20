@@ -6,11 +6,10 @@ import br.com.meli.api_social_meli.dto.response.ProductResponseDTO;
 import br.com.meli.api_social_meli.entity.Follower;
 import br.com.meli.api_social_meli.entity.Post;
 import br.com.meli.api_social_meli.entity.Product;
+import br.com.meli.api_social_meli.exception.BadRequestException;
 import br.com.meli.api_social_meli.repository.FollowerRepository;
 import br.com.meli.api_social_meli.repository.PostRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -30,7 +29,7 @@ public class PostService {
 
     public FollowedPostResponseDTO getFollowedPostsLastTwoWeeks(Integer userId, String order) {
         if (userId == null || userId <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+            throw new BadRequestException("User ID is required");
         }
 
         List<Integer> followedIds = followerRepository.findByUserFollowerId(userId).stream()
@@ -51,7 +50,7 @@ public class PostService {
 
         Comparator<PostResponseDTO> comparator = buildComparator(order);
         if (comparator == null && order != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid order parameter. Use 'date_asc' or 'date_desc'.");
+            throw new BadRequestException("Invalid order parameter. Use 'date_asc' or 'date_desc'.");
         }
         if (comparator != null) {
             postDTOs = postDTOs.stream().sorted(comparator).toList();

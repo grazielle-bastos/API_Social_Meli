@@ -7,12 +7,12 @@ import br.com.meli.api_social_meli.dto.response.PromoProductsCountDTO;
 import br.com.meli.api_social_meli.entity.Post;
 import br.com.meli.api_social_meli.entity.Product;
 import br.com.meli.api_social_meli.entity.User;
+import br.com.meli.api_social_meli.exception.BadRequestException;
+import br.com.meli.api_social_meli.exception.ResourceNotFoundException;
 import br.com.meli.api_social_meli.repository.PostRepository;
 import br.com.meli.api_social_meli.repository.ProductRepository;
 import br.com.meli.api_social_meli.repository.UserRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 
@@ -31,15 +31,15 @@ public class ProductService {
 
     public Post publishPost(PublishPostRequestDTO publishPostRequestDTO) {
         if (publishPostRequestDTO.getUserId() == null || publishPostRequestDTO.getUserId() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+            throw new BadRequestException("User ID is required");
         } else if (publishPostRequestDTO.getDate() == null || publishPostRequestDTO.getDate().isBefore(LocalDate.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Date is required and must be today or in the future");
+            throw new BadRequestException("Date is required and must be today or in the future");
         } else if (publishPostRequestDTO.getProduct() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product is required");
+            throw new BadRequestException("Product is required");
         } else if (publishPostRequestDTO.getCategory() == null || publishPostRequestDTO.getCategory() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category is required");
+            throw new BadRequestException("Category is required");
         } else if (publishPostRequestDTO.getPrice() == null || publishPostRequestDTO.getPrice() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Price is required and must be greater than 0");
+            throw new BadRequestException("Price is required and must be greater than 0");
         }
 
         ProductRequestDTO productDTO = publishPostRequestDTO.getProduct();
@@ -63,19 +63,19 @@ public class ProductService {
 
     public Post publishPromoPost(PromoPostRequestDTO promoPostRequestDTO) {
         if (promoPostRequestDTO.getUserId() == null || promoPostRequestDTO.getUserId() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+            throw new BadRequestException("User ID is required");
         } else if (promoPostRequestDTO.getDate() == null || promoPostRequestDTO.getDate().isBefore(LocalDate.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Date is required and must be today or in the future");
+            throw new BadRequestException("Date is required and must be today or in the future");
         } else if (promoPostRequestDTO.getProduct() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product is required");
+            throw new BadRequestException("Product is required");
         } else if (promoPostRequestDTO.getCategory() == null || promoPostRequestDTO.getCategory() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category is required and must be greater than zero");
+            throw new BadRequestException("Category is required and must be greater than zero");
         } else if (promoPostRequestDTO.getPrice() == null || promoPostRequestDTO.getPrice() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Price is required and must be greater than zero");
+            throw new BadRequestException("Price is required and must be greater than zero");
         } else if (promoPostRequestDTO.getHasPromo() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Has Promo is required");
+            throw new BadRequestException("Has Promo is required");
         } else if (promoPostRequestDTO.getDiscount() == null || promoPostRequestDTO.getDiscount() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Discount is required and must be greater than zero");
+            throw new BadRequestException("Discount is required and must be greater than zero");
         }
 
         ProductRequestDTO productRequestDTO = promoPostRequestDTO.getProduct();
@@ -101,7 +101,7 @@ public class ProductService {
 
     public PromoProductsCountDTO getPromoProductsCount(Integer userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         int count = postRepository.countByUserIdAndHasPromoTrue(userId);
 

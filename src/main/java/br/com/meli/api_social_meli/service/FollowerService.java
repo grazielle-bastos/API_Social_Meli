@@ -6,11 +6,12 @@ import br.com.meli.api_social_meli.dto.response.FollowersListResponseDTO;
 import br.com.meli.api_social_meli.dto.response.UserSummaryDTO;
 import br.com.meli.api_social_meli.entity.Follower;
 import br.com.meli.api_social_meli.entity.User;
+import br.com.meli.api_social_meli.exception.BadRequestException;
+import br.com.meli.api_social_meli.exception.ConflictException;
+import br.com.meli.api_social_meli.exception.ResourceNotFoundException;
 import br.com.meli.api_social_meli.repository.FollowerRepository;
 import br.com.meli.api_social_meli.repository.UserRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ import java.util.List;
 
 @Service
 public class FollowerService {
-    private static final String USER_NOT_FOUND = "User not found";
+
     private final FollowerRepository followerRepository;
     private final UserRepository userRepository;
 
@@ -30,19 +31,19 @@ public class FollowerService {
 
     public Follower follow(Integer userId, Integer userToFollowId) {
         if (userId == null || userId <= 0 || userToFollowId == null || userToFollowId <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+            throw new BadRequestException("User ID is required");
         }
         if (userId.equals(userToFollowId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User cannot follow itself");
+            throw new BadRequestException("User cannot follow itself");
         }
         if (!userRepository.existsById(userId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND);
+            throw new ResourceNotFoundException("User", "id", userId);
         }
         if (!userRepository.existsById(userToFollowId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User to follow not found");
+            throw new ResourceNotFoundException("User to follow", "id", userToFollowId);
         }
         if (followerRepository.existsByUserFollowerIdAndUserToFollowId(userId, userToFollowId)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "User already follows this user");
+            throw new ConflictException("User already follows this user");
         }
         Follower follower = new Follower();
         follower.setUserFollowerId(userId);
@@ -53,10 +54,10 @@ public class FollowerService {
 
     public FollowersCountResponseDTO getFollowersCount(Integer userId) {
         if (userId == null || userId <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+            throw new BadRequestException("User ID is required");
         }
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         long count = followerRepository.countByUserToFollowId(userId);
 
@@ -65,11 +66,11 @@ public class FollowerService {
 
     public FollowersListResponseDTO getFollowersList(Integer userId, String order) {
         if (userId == null || userId <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+            throw new BadRequestException("User ID is required");
         }
 
         User seller = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         List<Follower> relations = followerRepository.findByUserToFollowId(userId);
 
@@ -78,13 +79,13 @@ public class FollowerService {
         for (Follower relation : relations) {
             Integer followerId = relation.getUserFollowerId();
             User followerUser = userRepository.findById(followerId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", followerId));
             followers.add(new UserSummaryDTO(followerUser.getUserId(), followerUser.getUserName()));
         }
 
         Comparator<UserSummaryDTO> comparator = buildComparator(order);
         if (comparator == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid order parameter. Use 'name_asc' or 'name_desc'.");
+            throw new BadRequestException("Invalid order parameter. Use 'name_asc' or 'name_desc'.");
         }
         followers.sort(comparator);
         return new FollowersListResponseDTO(seller.getUserId(), seller.getUserName(), followers);
@@ -92,11 +93,11 @@ public class FollowerService {
 
     public FollowedListResponseDTO getFollowedList(Integer userId, String order) {
         if (userId == null || userId <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+            throw new BadRequestException("User ID is required");
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         List<Follower> relations = followerRepository.findByUserFollowerId(userId);
 
@@ -105,13 +106,13 @@ public class FollowerService {
         for (Follower relation : relations) {
             Integer followedId = relation.getUserToFollowId();
             User followedUser = userRepository.findById(followedId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", followedId));
             followed.add(new UserSummaryDTO(followedUser.getUserId(), followedUser.getUserName()));
         }
 
         Comparator<UserSummaryDTO> comparator = buildComparator(order);
         if (comparator == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid order parameter. Use 'name_asc' or 'name_desc'.");
+            throw new BadRequestException("Invalid order parameter. Use 'name_asc' or 'name_desc'.");
         }
         followed.sort(comparator);
 
@@ -120,21 +121,21 @@ public class FollowerService {
 
     public void unfollow(Integer userId, Integer userIdToUnfollow) {
         if (userId == null || userId <= 0 || userIdToUnfollow == null || userIdToUnfollow <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+            throw new BadRequestException("User ID is required");
         }
         if (userId.equals(userIdToUnfollow)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User cannot unfollow itself");
+            throw new BadRequestException("User cannot unfollow itself");
         }
         if (!userRepository.existsById(userId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND);
+            throw new ResourceNotFoundException("User", "id", userId);
         }
         if (!userRepository.existsById(userIdToUnfollow)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User to unfollow not found");
+            throw new ResourceNotFoundException("User to unfollow", "id", userIdToUnfollow);
         }
 
         Follower relation = followerRepository
                 .findByUserFollowerIdAndUserToFollowId(userId, userIdToUnfollow)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Follow relationship not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Follow relationship", "between users", userId + " and " + userIdToUnfollow));
 
         followerRepository.delete(relation);
     }
