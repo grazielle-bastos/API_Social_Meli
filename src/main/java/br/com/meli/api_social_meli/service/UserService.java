@@ -1,14 +1,15 @@
 package br.com.meli.api_social_meli.service;
 
 import br.com.meli.api_social_meli.dto.request.UserCreateRequestDTO;
+import br.com.meli.api_social_meli.dto.response.UserResponseDTO;
 import br.com.meli.api_social_meli.entity.User;
 import br.com.meli.api_social_meli.exception.BadRequestException;
 import br.com.meli.api_social_meli.exception.ResourceNotFoundException;
 import br.com.meli.api_social_meli.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class UserService {
@@ -19,12 +20,23 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    @Operation(summary = "List all users")
-    public List<User> listAll() {
-        return userRepository.findAll();
+    public Page<UserResponseDTO> listAll(Pageable pageable) {
+        Page<User> usersPage = userRepository.findAll(pageable);
+        return usersPage.map(UserResponseDTO::new);
     }
 
-    @Operation(summary = "Get user by ID")
+    public Page<UserResponseDTO> searchByName(String userName, Pageable pageable){
+        Page<User> usersPage;
+
+        if (userName == null || userName.isBlank()) {
+            usersPage = userRepository.findAll(pageable);
+        } else {
+            usersPage = userRepository.findByUserNameContainingIgnoreCase(userName, pageable);
+        }
+
+        return usersPage.map(UserResponseDTO::new);
+    }
+
     public User getUserById(Integer userId) {
         if (userId == null || userId <= 0) {
             throw new BadRequestException("User ID is required");
@@ -34,7 +46,6 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
     }
 
-    @Operation(summary = "Create a new user")
     public User userCreate(UserCreateRequestDTO userCreateRequestDTO) {
         if (userCreateRequestDTO == null || userCreateRequestDTO.getUserName() == null || userCreateRequestDTO.getUserName().isBlank()) {
             throw new BadRequestException("User name is required");
