@@ -6,7 +6,6 @@ import br.com.meli.api_social_meli.entity.User;
 import br.com.meli.api_social_meli.exception.BadRequestException;
 import br.com.meli.api_social_meli.exception.ResourceNotFoundException;
 import br.com.meli.api_social_meli.repository.UserRepository;
-import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
