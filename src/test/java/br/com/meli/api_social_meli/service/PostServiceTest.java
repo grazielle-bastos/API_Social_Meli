@@ -4,6 +4,7 @@ import br.com.meli.api_social_meli.dto.response.FollowedPostResponseDTO;
 import br.com.meli.api_social_meli.entity.Follower;
 import br.com.meli.api_social_meli.entity.Post;
 import br.com.meli.api_social_meli.entity.Product;
+import br.com.meli.api_social_meli.exception.BadRequestException;
 import br.com.meli.api_social_meli.repository.FollowerRepository;
 import br.com.meli.api_social_meli.repository.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -117,11 +117,10 @@ class PostServiceTest {
 
     @Test
     void getFollowedPostsLastTwoWeeks_WithNullUserId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> postService.getFollowedPostsLastTwoWeeks(null, null));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(followerRepository, never()).findByUserFollowerId(anyInt());
         verify(postRepository, never()).findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
@@ -130,11 +129,10 @@ class PostServiceTest {
 
     @Test
     void getFollowedPostsLastTwoWeeks_WithZeroUserId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> postService.getFollowedPostsLastTwoWeeks(0, null));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(followerRepository, never()).findByUserFollowerId(anyInt());
         verify(postRepository, never()).findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
@@ -162,11 +160,10 @@ class PostServiceTest {
         when(postRepository.findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
                 anyList(), any(LocalDate.class))).thenReturn(posts);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> postService.getFollowedPostsLastTwoWeeks(userId, "invalid_order"));
 
-        assertEquals("Invalid order parameter. Use 'date_asc' or 'date_desc'.", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Invalid order parameter. Use 'date_asc' or 'date_desc'.", exception.getMessage());
 
         verify(followerRepository, times(1)).findByUserFollowerId(userId);
         verify(postRepository, times(1)).findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(

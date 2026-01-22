@@ -7,6 +7,8 @@ import br.com.meli.api_social_meli.dto.response.PromoProductsCountDTO;
 import br.com.meli.api_social_meli.entity.Post;
 import br.com.meli.api_social_meli.entity.Product;
 import br.com.meli.api_social_meli.entity.User;
+import br.com.meli.api_social_meli.exception.BadRequestException;
+import br.com.meli.api_social_meli.exception.ResourceNotFoundException;
 import br.com.meli.api_social_meli.repository.PostRepository;
 import br.com.meli.api_social_meli.repository.ProductRepository;
 import br.com.meli.api_social_meli.repository.UserRepository;
@@ -16,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -111,11 +112,10 @@ class ProductServiceTest {
     void publishPost_WithNullUserId_ShouldThrowException() {
         validPublishPostRequestDTO.setUserId(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPost(validPublishPostRequestDTO));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -124,11 +124,10 @@ class ProductServiceTest {
     void publishPost_WithZeroUserId_ShouldThrowException() {
         validPublishPostRequestDTO.setUserId(0);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPost(validPublishPostRequestDTO));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -137,11 +136,10 @@ class ProductServiceTest {
     void publishPost_WithPastDate_ShouldThrowException() {
         validPublishPostRequestDTO.setDate(LocalDate.now().minusDays(1));
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPost(validPublishPostRequestDTO));
 
-        assertEquals("Date is required and must be today or in the future", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Date is required and must be today or in the future", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -150,11 +148,10 @@ class ProductServiceTest {
     void publishPost_WithNullDate_ShouldThrowException() {
         validPublishPostRequestDTO.setDate(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPost(validPublishPostRequestDTO));
 
-        assertEquals("Date is required and must be today or in the future", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Date is required and must be today or in the future", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -163,11 +160,10 @@ class ProductServiceTest {
     void publishPost_WithNullProduct_ShouldThrowException() {
         validPublishPostRequestDTO.setProduct(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPost(validPublishPostRequestDTO));
 
-        assertEquals("Product is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Product is required", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -176,11 +172,10 @@ class ProductServiceTest {
     void publishPost_WithNullCategory_ShouldThrowException() {
         validPublishPostRequestDTO.setCategory(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPost(validPublishPostRequestDTO));
 
-        assertEquals("Category is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Category is required", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -189,11 +184,10 @@ class ProductServiceTest {
     void publishPost_WithZeroCategory_ShouldThrowException() {
         validPublishPostRequestDTO.setCategory(0);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPost(validPublishPostRequestDTO));
 
-        assertEquals("Category is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Category is required", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -202,11 +196,10 @@ class ProductServiceTest {
     void publishPost_WithNullPrice_ShouldThrowException() {
         validPublishPostRequestDTO.setPrice(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPost(validPublishPostRequestDTO));
 
-        assertEquals("Price is required and must be greater than 0", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Price is required and must be greater than 0", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -215,11 +208,10 @@ class ProductServiceTest {
     void publishPost_WithZeroPrice_ShouldThrowException() {
         validPublishPostRequestDTO.setPrice(0.0);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPost(validPublishPostRequestDTO));
 
-        assertEquals("Price is required and must be greater than 0", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Price is required and must be greater than 0", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -246,11 +238,10 @@ class ProductServiceTest {
     void publishPromoPost_WithNullUserId_ShouldThrowException() {
         validPromoPostRequestDTO.setUserId(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPromoPost(validPromoPostRequestDTO));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -259,11 +250,10 @@ class ProductServiceTest {
     void publishPromoPost_WithZeroUserId_ShouldThrowException() {
         validPromoPostRequestDTO.setUserId(0);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPromoPost(validPromoPostRequestDTO));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -272,11 +262,10 @@ class ProductServiceTest {
     void publishPromoPost_WithPastDate_ShouldThrowException() {
         validPromoPostRequestDTO.setDate(LocalDate.now().minusDays(1));
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPromoPost(validPromoPostRequestDTO));
 
-        assertEquals("Date is required and must be today or in the future", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Date is required and must be today or in the future", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -285,11 +274,10 @@ class ProductServiceTest {
     void publishPromoPost_WithNullDate_ShouldThrowException() {
         validPromoPostRequestDTO.setDate(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPromoPost(validPromoPostRequestDTO));
 
-        assertEquals("Date is required and must be today or in the future", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Date is required and must be today or in the future", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -298,11 +286,10 @@ class ProductServiceTest {
     void publishPromoPost_WithNullProduct_ShouldThrowException() {
         validPromoPostRequestDTO.setProduct(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPromoPost(validPromoPostRequestDTO));
 
-        assertEquals("Product is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Product is required", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -311,11 +298,10 @@ class ProductServiceTest {
     void publishPromoPost_WithNullCategory_ShouldThrowException() {
         validPromoPostRequestDTO.setCategory(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPromoPost(validPromoPostRequestDTO));
 
-        assertEquals("Category is required and must be greater than zero", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Category is required and must be greater than zero", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -324,11 +310,10 @@ class ProductServiceTest {
     void publishPromoPost_WithZeroCategory_ShouldThrowException() {
         validPromoPostRequestDTO.setCategory(0);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPromoPost(validPromoPostRequestDTO));
 
-        assertEquals("Category is required and must be greater than zero", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Category is required and must be greater than zero", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -337,11 +322,10 @@ class ProductServiceTest {
     void publishPromoPost_WithNullPrice_ShouldThrowException() {
         validPromoPostRequestDTO.setPrice(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPromoPost(validPromoPostRequestDTO));
 
-        assertEquals("Price is required and must be greater than zero", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Price is required and must be greater than zero", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -350,11 +334,10 @@ class ProductServiceTest {
     void publishPromoPost_WithZeroPrice_ShouldThrowException() {
         validPromoPostRequestDTO.setPrice(0.0);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPromoPost(validPromoPostRequestDTO));
 
-        assertEquals("Price is required and must be greater than zero", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Price is required and must be greater than zero", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -363,11 +346,10 @@ class ProductServiceTest {
     void publishPromoPost_WithNullHasPromo_ShouldThrowException() {
         validPromoPostRequestDTO.setHasPromo(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPromoPost(validPromoPostRequestDTO));
 
-        assertEquals("Has Promo is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Has Promo is required", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -376,11 +358,10 @@ class ProductServiceTest {
     void publishPromoPost_WithNullDiscount_ShouldThrowException() {
         validPromoPostRequestDTO.setDiscount(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPromoPost(validPromoPostRequestDTO));
 
-        assertEquals("Discount is required and must be greater than zero", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Discount is required and must be greater than zero", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -389,11 +370,10 @@ class ProductServiceTest {
     void publishPromoPost_WithZeroDiscount_ShouldThrowException() {
         validPromoPostRequestDTO.setDiscount(0.0);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> productService.publishPromoPost(validPromoPostRequestDTO));
 
-        assertEquals("Discount is required and must be greater than zero", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Discount is required and must be greater than zero", exception.getMessage());
 
         verify(postRepository, never()).save(any(Post.class));
     }
@@ -424,11 +404,10 @@ class ProductServiceTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> productService.getPromoProductsCount(userId));
 
-        assertEquals("User not found", exception.getReason());
-        assertEquals(404, exception.getStatusCode().value());
+        assertEquals("User not found with id: '999'", exception.getMessage());
 
         verify(userRepository, times(1)).findById(userId);
         verify(postRepository, never()).countByUserIdAndHasPromoTrue(anyInt());

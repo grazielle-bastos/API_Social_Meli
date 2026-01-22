@@ -6,6 +6,9 @@ import br.com.meli.api_social_meli.dto.response.FollowersListResponseDTO;
 import br.com.meli.api_social_meli.dto.response.UserSummaryDTO;
 import br.com.meli.api_social_meli.entity.Follower;
 import br.com.meli.api_social_meli.entity.User;
+import br.com.meli.api_social_meli.exception.BadRequestException;
+import br.com.meli.api_social_meli.exception.ConflictException;
+import br.com.meli.api_social_meli.exception.ResourceNotFoundException;
 import br.com.meli.api_social_meli.repository.FollowerRepository;
 import br.com.meli.api_social_meli.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,11 +103,10 @@ public class FollowerServiceTest {
 
     @Test
     void follow_WithNullUserId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.follow(null, 2));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).existsById(anyInt());
         verify(followerRepository, never()).save(any(Follower.class));
@@ -112,11 +114,10 @@ public class FollowerServiceTest {
 
     @Test
     void follow_WithZeroUserId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.follow(0, 2));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).existsById(anyInt());
         verify(followerRepository, never()).save(any(Follower.class));
@@ -124,11 +125,10 @@ public class FollowerServiceTest {
 
     @Test
     void follow_WithNullUserToFollowId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.follow(1, null));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).existsById(anyInt());
         verify(followerRepository, never()).save(any(Follower.class));
@@ -136,11 +136,10 @@ public class FollowerServiceTest {
 
     @Test
     void follow_WithZeroUserToFollowId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.follow(1, 0));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).existsById(anyInt());
         verify(followerRepository, never()).save(any(Follower.class));
@@ -148,11 +147,10 @@ public class FollowerServiceTest {
 
     @Test
     void follow_WithSameUserIds_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.follow(1, 1));
 
-        assertEquals("User cannot follow itself", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User cannot follow itself", exception.getMessage());
 
         verify(userRepository, never()).existsById(anyInt());
         verify(followerRepository, never()).save(any(Follower.class));
@@ -161,11 +159,10 @@ public class FollowerServiceTest {
     void follow_WithNonExistentFollower_ShouldThrowException() {
         when(userRepository.existsById(1)).thenReturn(false);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> followerService.follow(1, 2));
 
-        assertEquals("User not found", exception.getReason());
-        assertEquals(404, exception.getStatusCode().value());
+        assertEquals("User not found with id: '1'", exception.getMessage());
 
         verify(userRepository, times(1)).existsById(1);
         verify(userRepository, never()).existsById(2);
@@ -178,11 +175,10 @@ public class FollowerServiceTest {
         when(userRepository.existsById(1)).thenReturn(true);
         when(userRepository.existsById(2)).thenReturn(false);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> followerService.follow(1, 2));
 
-        assertEquals("User to follow not found", exception.getReason());
-        assertEquals(404, exception.getStatusCode().value());
+        assertEquals("User to follow not found with id: '2'", exception.getMessage());
 
         verify(userRepository, times(1)).existsById(1);
         verify(userRepository, times(1)).existsById(2);
@@ -195,11 +191,10 @@ public class FollowerServiceTest {
         when(userRepository.existsById(2)).thenReturn(true);
         when(followerRepository.existsByUserFollowerIdAndUserToFollowId(1, 2)).thenReturn(true);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        ConflictException exception = assertThrows(ConflictException.class,
                 () -> followerService.follow(1, 2));
 
-        assertEquals("User already follows this user", exception.getReason());
-        assertEquals(409, exception.getStatusCode().value());
+        assertEquals("User already follows this user", exception.getMessage());
 
         verify(userRepository, times(1)).existsById(1);
         verify(userRepository, times(1)).existsById(2);
@@ -229,22 +224,20 @@ public class FollowerServiceTest {
 
     @Test
     void getFollowersCount_WithNullUserId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.getFollowersCount(null));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).findById(anyInt());
         verify(followerRepository, never()).countByUserToFollowId(anyInt());
     }
     @Test
     void getFollowersCount_WithZeroUserId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.getFollowersCount(0));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).findById(anyInt());
         verify(followerRepository, never()).countByUserToFollowId(anyInt());
@@ -255,11 +248,10 @@ public class FollowerServiceTest {
         Integer userId = 999;
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> followerService.getFollowersCount(userId));
 
-        assertEquals("User not found", exception.getReason());
-        assertEquals(404, exception.getStatusCode().value());
+        assertEquals("User not found with id: '999'", exception.getMessage());
 
         verify(userRepository, times(1)).findById(userId);
         verify(followerRepository, never()).countByUserToFollowId(anyInt());
@@ -315,11 +307,10 @@ public class FollowerServiceTest {
 
     @Test
     void getFollowersList_WithNullUserId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.getFollowersList(null, "name_asc"));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).findById(anyInt());
         verify(followerRepository, never()).findByUserToFollowId(anyInt());
@@ -327,11 +318,10 @@ public class FollowerServiceTest {
 
     @Test
     void getFollowersList_WithZeroUserId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.getFollowersList(0, "name_asc"));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).findById(anyInt());
         verify(followerRepository, never()).findByUserToFollowId(anyInt());
@@ -342,11 +332,10 @@ public class FollowerServiceTest {
         Integer userId = 999;
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> followerService.getFollowersList(userId, "name_asc"));
 
-        assertEquals("User not found", exception.getReason());
-        assertEquals(404, exception.getStatusCode().value());
+        assertEquals("User not found with id: '999'", exception.getMessage());
 
         verify(userRepository, times(1)).findById(userId);
         verify(followerRepository, never()).findByUserToFollowId(anyInt());
@@ -360,11 +349,10 @@ public class FollowerServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user2));
         when(followerRepository.findByUserToFollowId(userId)).thenReturn(new ArrayList<>());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.getFollowersList(userId, invalidOrder));
 
-        assertEquals("Invalid order parameter. Use 'name_asc' or 'name_desc'.", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Invalid order parameter. Use 'name_asc' or 'name_desc'.", exception.getMessage());
 
         verify(userRepository, times(1)).findById(userId);
         verify(followerRepository, times(1)).findByUserToFollowId(userId);
@@ -419,11 +407,10 @@ public class FollowerServiceTest {
 
     @Test
     void getFollowedList_WithNullUserId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.getFollowedList(null, "name_asc"));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).findById(anyInt());
         verify(followerRepository, never()).findByUserFollowerId(anyInt());
@@ -431,11 +418,10 @@ public class FollowerServiceTest {
 
     @Test
     void getFollowedList_WithZeroUserId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.getFollowedList(0, "name_asc"));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).findById(anyInt());
         verify(followerRepository, never()).findByUserFollowerId(anyInt());
@@ -446,11 +432,10 @@ public class FollowerServiceTest {
         Integer userId = 999;
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> followerService.getFollowedList(userId, "name_asc"));
 
-        assertEquals("User not found", exception.getReason());
-        assertEquals(404, exception.getStatusCode().value());
+        assertEquals("User not found with id: '999'", exception.getMessage());
 
         verify(userRepository, times(1)).findById(userId);
         verify(followerRepository, never()).findByUserFollowerId(anyInt());
@@ -464,11 +449,10 @@ public class FollowerServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user1));
         when(followerRepository.findByUserFollowerId(userId)).thenReturn(new ArrayList<>());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.getFollowedList(userId, invalidOrder));
 
-        assertEquals("Invalid order parameter. Use 'name_asc' or 'name_desc'.", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("Invalid order parameter. Use 'name_asc' or 'name_desc'.", exception.getMessage());
 
         verify(userRepository, times(1)).findById(userId);
         verify(followerRepository, times(1)).findByUserFollowerId(userId);
@@ -501,11 +485,10 @@ public class FollowerServiceTest {
 
     @Test
     void unfollow_WithNullUserId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.unfollow(null, 2));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).existsById(anyInt());
         verify(followerRepository, never()).findByUserFollowerIdAndUserToFollowId(anyInt(), anyInt());
@@ -514,11 +497,10 @@ public class FollowerServiceTest {
 
     @Test
     void unfollow_WithZeroUserId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.unfollow(0, 2));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).existsById(anyInt());
         verify(followerRepository, never()).findByUserFollowerIdAndUserToFollowId(anyInt(), anyInt());
@@ -527,11 +509,10 @@ public class FollowerServiceTest {
 
     @Test
     void unfollow_WithNullUserToUnfollowId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.unfollow(1, null));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).existsById(anyInt());
         verify(followerRepository, never()).findByUserFollowerIdAndUserToFollowId(anyInt(), anyInt());
@@ -540,11 +521,10 @@ public class FollowerServiceTest {
 
     @Test
     void unfollow_WithZeroUserToUnfollowId_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.unfollow(1, 0));
 
-        assertEquals("User ID is required", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).existsById(anyInt());
         verify(followerRepository, never()).findByUserFollowerIdAndUserToFollowId(anyInt(), anyInt());
@@ -553,11 +533,10 @@ public class FollowerServiceTest {
 
     @Test
     void unfollow_WithSameUserIds_ShouldThrowException() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> followerService.unfollow(1, 1));
 
-        assertEquals("User cannot unfollow itself", exception.getReason());
-        assertEquals(400, exception.getStatusCode().value());
+        assertEquals("User cannot unfollow itself", exception.getMessage());
 
         verify(userRepository, never()).existsById(anyInt());
         verify(followerRepository, never()).findByUserFollowerIdAndUserToFollowId(anyInt(), anyInt());
@@ -571,11 +550,10 @@ public class FollowerServiceTest {
 
         when(userRepository.existsById(userId)).thenReturn(false);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> followerService.unfollow(userId, userIdToUnfollow));
 
-        assertEquals("User not found", exception.getReason());
-        assertEquals(404, exception.getStatusCode().value());
+        assertEquals("User not found with id: '1'", exception.getMessage());
 
         verify(userRepository, times(1)).existsById(userId);
         verify(userRepository, never()).existsById(userIdToUnfollow);
@@ -591,11 +569,10 @@ public class FollowerServiceTest {
         when(userRepository.existsById(userId)).thenReturn(true);
         when(userRepository.existsById(userIdToUnfollow)).thenReturn(false);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> followerService.unfollow(userId, userIdToUnfollow));
 
-        assertEquals("User to unfollow not found", exception.getReason());
-        assertEquals(404, exception.getStatusCode().value());
+        assertEquals("User to unfollow not found with id: '2'", exception.getMessage());
 
         verify(userRepository, times(1)).existsById(userId);
         verify(userRepository, times(1)).existsById(userIdToUnfollow);
