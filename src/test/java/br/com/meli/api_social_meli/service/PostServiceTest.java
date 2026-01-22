@@ -13,6 +13,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -99,51 +103,56 @@ class PostServiceTest {
     @Test
     void getFollowedPostsLastTwoWeeks_WithValidUserIdAndNoOrder_ShouldReturnPosts() {
         when(followerRepository.findByUserFollowerId(userId)).thenReturn(followers);
-        when(postRepository.findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
-                anyList(), any(LocalDate.class))).thenReturn(posts);
 
-        FollowedPostResponseDTO result = postService.getFollowedPostsLastTwoWeeks(userId, null);
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Post> postsPage = new PageImpl<>(posts, pageable, posts.size());
+        when(postRepository.findByUserIdInAndDateGreaterThanEqual(
+                anyList(), any(LocalDate.class), any(Pageable.class))).thenReturn(postsPage);
+        FollowedPostResponseDTO result = postService.getFollowedPostsLastTwoWeeks(userId, null, pageable);
 
         assertNotNull(result);
         assertEquals(userId, result.getUserId());
-        assertEquals(2, result.getPosts().size());
-        assertEquals(post1.getPostId(), result.getPosts().get(0).getPostId());
-        assertEquals(post2.getPostId(), result.getPosts().get(1).getPostId());
+
+        assertNotNull(result.getPosts());
+        assertEquals(2, result.getPosts().getContent().size());
+        assertEquals(post1.getPostId(), result.getPosts().getContent().get(0).getPostId());
+        assertEquals(post2.getPostId(), result.getPosts().getContent().get(1).getPostId());
 
         verify(followerRepository, times(1)).findByUserFollowerId(userId);
-        verify(postRepository, times(1)).findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
-                anyList(), any(LocalDate.class));
+        verify(postRepository, times(1)).findByUserIdInAndDateGreaterThanEqual(
+                anyList(), any(LocalDate.class), any(Pageable.class));
     }
 
     @Test
     void getFollowedPostsLastTwoWeeks_WithNullUserId_ShouldThrowException() {
+        Pageable pageable = PageRequest.of(0, 5);
         BadRequestException exception = assertThrows(BadRequestException.class,
-                () -> postService.getFollowedPostsLastTwoWeeks(null, null));
+                () -> postService.getFollowedPostsLastTwoWeeks(null, null, pageable));
 
         assertEquals("User ID is required", exception.getMessage());
 
         verify(followerRepository, never()).findByUserFollowerId(anyInt());
-        verify(postRepository, never()).findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
-                anyList(), any(LocalDate.class));
+        verify(postRepository, never()).findByUserIdInAndDateGreaterThanEqual(
+                anyList(), any(LocalDate.class), any(Pageable.class));
     }
 
     @Test
     void getFollowedPostsLastTwoWeeks_WithZeroUserId_ShouldThrowException() {
         BadRequestException exception = assertThrows(BadRequestException.class,
-                () -> postService.getFollowedPostsLastTwoWeeks(0, null));
+                () -> postService.getFollowedPostsLastTwoWeeks(0, null, PageRequest.of(0, 5)));
 
         assertEquals("User ID is required", exception.getMessage());
 
         verify(followerRepository, never()).findByUserFollowerId(anyInt());
-        verify(postRepository, never()).findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
-                anyList(), any(LocalDate.class));
+        verify(postRepository, never()).findByUserIdInAndDateGreaterThanEqual(
+                anyList(), any(LocalDate.class), any(Pageable.class));
     }
 
     @Test
     void getFollowedPostsLastTwoWeeks_WithNoFollowed_ShouldReturnEmptyList() {
         when(followerRepository.findByUserFollowerId(userId)).thenReturn(Collections.emptyList());
 
-        FollowedPostResponseDTO result = postService.getFollowedPostsLastTwoWeeks(userId, null);
+        FollowedPostResponseDTO result = postService.getFollowedPostsLastTwoWeeks(userId, null, PageRequest.of(0, 5));
 
         assertNotNull(result);
         assertEquals(userId, result.getUserId());
@@ -157,56 +166,58 @@ class PostServiceTest {
     @Test
     void getFollowedPostsLastTwoWeeks_WithInvalidOrder_ShouldThrowException() {
         when(followerRepository.findByUserFollowerId(userId)).thenReturn(followers);
-        when(postRepository.findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
-                anyList(), any(LocalDate.class))).thenReturn(posts);
 
         BadRequestException exception = assertThrows(BadRequestException.class,
-                () -> postService.getFollowedPostsLastTwoWeeks(userId, "invalid_order"));
+                () -> postService.getFollowedPostsLastTwoWeeks(userId, "invalid_order", PageRequest.of(0, 5)));
 
         assertEquals("Invalid order parameter. Use 'date_asc' or 'date_desc'.", exception.getMessage());
 
         verify(followerRepository, times(1)).findByUserFollowerId(userId);
-        verify(postRepository, times(1)).findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
-                anyList(), any(LocalDate.class));
     }
 
     @Test
     void getFollowedPostsLastTwoWeeks_WithValidUserIdAndDateAscOrder_ShouldReturnOrderedPosts() {
         when(followerRepository.findByUserFollowerId(userId)).thenReturn(followers);
-        when(postRepository.findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
-                anyList(), any(LocalDate.class))).thenReturn(posts);
 
-        FollowedPostResponseDTO result = postService.getFollowedPostsLastTwoWeeks(userId, "date_asc");
+        Pageable pageable = PageRequest.of(0, 5);
+        List<Post> ascPosts = Arrays.asList(post2, post1);
+        Page<Post> postsPage = new PageImpl<>(ascPosts, pageable, ascPosts.size());
 
-        assertNotNull(result);
-        assertEquals(userId, result.getUserId());
-        assertEquals(2, result.getPosts().size());
+        when(postRepository.findByUserIdInAndDateGreaterThanEqual(
+                anyList(), any(LocalDate.class), any(Pageable.class))).thenReturn(postsPage);
+
+        FollowedPostResponseDTO result = postService.getFollowedPostsLastTwoWeeks(userId, "date_asc", pageable);
+
+        assertNotNull(result.getPosts());
+        assertEquals(2, result.getPosts().getContent().size());
         // Em ordem ascendente, post2 (mais antigo) deve vir primeiro
-        assertEquals(post2.getPostId(), result.getPosts().get(0).getPostId());
-        assertEquals(post1.getPostId(), result.getPosts().get(1).getPostId());
+        assertEquals(post2.getPostId(), result.getPosts().getContent().get(0).getPostId());
+        assertEquals(post1.getPostId(), result.getPosts().getContent().get(1).getPostId());
 
         verify(followerRepository, times(1)).findByUserFollowerId(userId);
-        verify(postRepository, times(1)).findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
-                anyList(), any(LocalDate.class));
+        verify(postRepository, times(1)).findByUserIdInAndDateGreaterThanEqual(
+                anyList(), any(LocalDate.class), any(Pageable.class));
     }
 
     @Test
     void getFollowedPostsLastTwoWeeks_WithValidUserIdAndDateDescOrder_ShouldReturnOrderedPosts() {
         when(followerRepository.findByUserFollowerId(userId)).thenReturn(followers);
-        when(postRepository.findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
-                anyList(), any(LocalDate.class))).thenReturn(posts);
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Post> postsPage = new PageImpl<>(posts, pageable, posts.size());
+        when(postRepository.findByUserIdInAndDateGreaterThanEqual(
+                anyList(), any(LocalDate.class), any(Pageable.class))).thenReturn(postsPage);
 
-        FollowedPostResponseDTO result = postService.getFollowedPostsLastTwoWeeks(userId, "date_desc");
+        FollowedPostResponseDTO result = postService.getFollowedPostsLastTwoWeeks(userId, "date_desc", PageRequest.of(0, 5));
 
         assertNotNull(result);
         assertEquals(userId, result.getUserId());
-        assertEquals(2, result.getPosts().size());
+        assertEquals(2, result.getPosts().getContent().size());
         // Em ordem descendente, post1 (mais recente) deve vir primeiro
-        assertEquals(post1.getPostId(), result.getPosts().get(0).getPostId());
-        assertEquals(post2.getPostId(), result.getPosts().get(1).getPostId());
+        assertEquals(post1.getPostId(), result.getPosts().getContent().get(0).getPostId());
+        assertEquals(post2.getPostId(), result.getPosts().getContent().get(1).getPostId());
 
         verify(followerRepository, times(1)).findByUserFollowerId(userId);
-        verify(postRepository, times(1)).findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(
-                anyList(), any(LocalDate.class));
+        verify(postRepository, times(1)).findByUserIdInAndDateGreaterThanEqual(
+                anyList(), any(LocalDate.class), any(Pageable.class));
     }
 }

@@ -50,7 +50,7 @@ public class PostService {
         LocalDate startDate = LocalDate.now().minusWeeks(2);
 
         Sort sort;
-        if (order == null || order.isBlank() || order.equals("data_desc")) {
+        if (order == null || order.isBlank() || order.equals("date_desc")) {
             sort = Sort.by("date").descending();
         } else if (order.equals("date_asc")) {
             sort = Sort.by("date").ascending();
