@@ -9,11 +9,13 @@ import br.com.meli.api_social_meli.entity.Product;
 import br.com.meli.api_social_meli.exception.BadRequestException;
 import br.com.meli.api_social_meli.repository.FollowerRepository;
 import br.com.meli.api_social_meli.repository.PostRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -27,7 +29,11 @@ public class PostService {
         this.followerRepository = followerRepository;
     }
 
-    public FollowedPostResponseDTO getFollowedPostsLastTwoWeeks(Integer userId, String order) {
+    public FollowedPostResponseDTO getFollowedPostsLastTwoWeeks(
+            Integer userId,
+            String order,
+            Pageable pageable) {
+
         if (userId == null || userId <= 0) {
             throw new BadRequestException("User ID is required");
         }
@@ -38,25 +44,30 @@ public class PostService {
                 .toList();
 
         if (followedIds.isEmpty()) {
-            return new FollowedPostResponseDTO(userId, Collections.emptyList());
+            return new FollowedPostResponseDTO(userId, Page.empty(pageable));
         }
 
         LocalDate startDate = LocalDate.now().minusWeeks(2);
-        List<Post> posts = postRepository.findByUserIdInAndDateGreaterThanEqualOrderByDateDesc(followedIds, startDate);
 
-        List<PostResponseDTO> postDTOs = posts.stream()
-                .map(this::mapToPostResponseDTO)
-                .toList();
-
-        Comparator<PostResponseDTO> comparator = buildComparator(order);
-        if (comparator == null && order != null) {
+        Sort sort;
+        if (order == null || order.isBlank() || order.equals("data_desc")) {
+            sort = Sort.by("date").descending();
+        } else if (order.equals("date_asc")) {
+            sort = Sort.by("date").ascending();
+        } else {
             throw new BadRequestException("Invalid order parameter. Use 'date_asc' or 'date_desc'.");
         }
-        if (comparator != null) {
-            postDTOs = postDTOs.stream().sorted(comparator).toList();
-        }
 
-        return new FollowedPostResponseDTO(userId, postDTOs);
+        Pageable pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+
+        Page<Post> postsPage = postRepository.findByUserIdInAndDateGreaterThanEqual(
+                followedIds,
+                startDate,
+                pageRequest);
+
+        Page<PostResponseDTO> postDTOPage = postsPage.map(this::mapToPostResponseDTO);
+
+        return new FollowedPostResponseDTO(userId, postDTOPage);
     }
 
     private PostResponseDTO mapToPostResponseDTO(Post post) {
@@ -79,25 +90,4 @@ public class PostService {
         );
     }
 
-    private String normalizeOrder(String order) {
-        if (order == null) {
-            return null;
-        }
-        if ("date_asc".equals(order) || "date_desc".equals(order)) {
-            return order;
-        }
-        return null;
-    }
-
-    private Comparator<PostResponseDTO> buildComparator(String order) {
-        String normalizedOrder = normalizeOrder(order);
-        if (normalizedOrder == null) {
-            return null;
-        }
-
-        Comparator<PostResponseDTO> comparator =
-                Comparator.comparing(PostResponseDTO::getDate);
-
-        return normalizedOrder.equals("date_desc") ? comparator.reversed() : comparator;
-    }
 }

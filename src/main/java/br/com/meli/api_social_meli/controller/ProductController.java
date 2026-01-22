@@ -18,6 +18,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -77,8 +80,15 @@ public class ProductController {
     @GetMapping("/followed/{userId}/list")
     public ResponseEntity<FollowedPostResponseDTO> getFollowedPosts(
             @PathVariable Integer userId,
-            @RequestParam(value = "order", required = false) String order) {
-        return ResponseEntity.status(HttpStatus.OK).body(postService.getFollowedPostsLastTwoWeeks(userId, order));
+            @RequestParam(value = "order", required = false) String order,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        FollowedPostResponseDTO response =
+                postService.getFollowedPostsLastTwoWeeks(userId, order, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @Operation(
