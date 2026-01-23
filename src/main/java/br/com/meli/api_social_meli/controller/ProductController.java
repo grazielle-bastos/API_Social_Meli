@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -63,7 +62,7 @@ public class ProductController {
 
     @Operation(
             summary = "Lista posts de vendedores seguidos nas últimas duas semanas",
-            description = "Retorna os posts publicados pelos fornecedores que o usuário segue nas últimas duas semanas. Ordenação opcional por data: 'date_asc' (crescente, mais antiga primeiro) ou 'date_desc' (decrescente, mais recente primeiro). Padrão: date_desc."
+            description = "Retorna os posts publicados pelos fornecedores que o usuário segue nas últimas duas semanas com paginação. Ordenação opcional por data: 'date_asc' (crescente, mais antiga primeiro) ou 'date_desc' (decrescente, mais recente primeiro). Padrão: date_desc."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
@@ -75,7 +74,9 @@ public class ProductController {
     })
     @Parameters({
             @Parameter(name = "userId", description = "ID do usuário que segue fornecedores", example = "4698", required = true),
-            @Parameter(name = "order", description = "Ordenação por data: 'date_asc' ou 'date_desc'. Opcional.", example = "date_desc", required = false)
+            @Parameter(name = "order", description = "Ordenação por data: 'date_asc' ou 'date_desc'. Opcional.", example = "date_desc", required = false),
+            @Parameter(name = "page", description = "Número da página (0-based)", example = "0", required = false),
+            @Parameter(name = "size", description = "Quantidade de itens por página", example = "5", required = false)
     })
     @GetMapping("/followed/{userId}/list")
     public ResponseEntity<FollowedPostResponseDTO> getFollowedPosts(
