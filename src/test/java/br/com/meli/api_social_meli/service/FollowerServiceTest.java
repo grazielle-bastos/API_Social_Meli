@@ -17,7 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
@@ -31,7 +34,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class FollowerServiceTest {
+class FollowerServiceTest {
 
     @Mock
     private FollowerRepository followerRepository;
@@ -49,7 +52,7 @@ public class FollowerServiceTest {
     private List<Follower> followedList;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         user1 = new User();
         user1.setUserId(1);
         user1.setUserName("User 1");
@@ -285,60 +288,170 @@ public class FollowerServiceTest {
         followerRelations.add(relation1);
         followerRelations.add(relation2);
 
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Follower> followersPage = new PageImpl<>(followerRelations, pageable, followerRelations.size());
+
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(user2));
-        when(followerRepository.findByUserToFollowId(userId)).thenReturn(followerRelations);
         when(userRepository.findById(1)).thenReturn(Optional.of(follower1));
         when(userRepository.findById(3)).thenReturn(Optional.of(follower3));
+        when(followerRepository.findByUserToFollowId(eq(userId), any(Pageable.class))).thenReturn(followersPage);
 
-        FollowersListResponseDTO result = followerService.getFollowersList(userId, order);
+        Page<UserSummaryDTO> result = followerService.getFollowersList(userId, order, pageable);
 
         assertNotNull(result);
-        assertEquals(userId, result.getUserId());
-        assertEquals("User 2", result.getUserName());
-        assertEquals(2, result.getFollowers().size());
-        assertEquals("Alice", result.getFollowers().get(0).getUserName()); // Alice deve vir primeiro em ordem alfabética
-        assertEquals("Bob", result.getFollowers().get(1).getUserName());
+        assertEquals(2, result.getContent().size());
+        assertEquals("Alice", result.getContent().get(0).getUserName()); // Alice deve vir primeiro em ordem alfabética
+        assertEquals("Bob", result.getContent().get(1).getUserName());
 
         verify(userRepository, times(1)).findById(userId);
-        verify(followerRepository, times(1)).findByUserToFollowId(userId);
         verify(userRepository, times(1)).findById(1);
         verify(userRepository, times(1)).findById(3);
+        verify(followerRepository, times(1)).findByUserToFollowId(eq(userId), any(Pageable.class));
+    }
+
+    @Test
+    void getFollowersList_WithValidUserIdAndNameDescOrder_ShouldReturnOrderedList() {
+        Integer userId = 2;
+        String order = "name_desc";
+
+        User follower1 = new User();
+        follower1.setUserId(1);
+        follower1.setUserName("Alice");
+
+        User follower3 = new User();
+        follower3.setUserId(3);
+        follower3.setUserName("Bob");
+
+        Follower relation1 = new Follower();
+        relation1.setFollowerId(1);
+        relation1.setUserFollowerId(1);
+        relation1.setUserToFollowId(2);
+
+        Follower relation2 = new Follower();
+        relation2.setFollowerId(2);
+        relation2.setUserFollowerId(3);
+        relation2.setUserToFollowId(2);
+
+        List<Follower> followerRelations = new ArrayList<>();
+        followerRelations.add(relation1);
+        followerRelations.add(relation2);
+
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Follower> followersPage = new PageImpl<>(followerRelations, pageable, followerRelations.size());
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user2));
+        when(userRepository.findById(1)).thenReturn(Optional.of(follower1));
+        when(userRepository.findById(3)).thenReturn(Optional.of(follower3));
+        when(followerRepository.findByUserToFollowId(eq(userId), any(Pageable.class)))
+                .thenReturn(followersPage);
+
+        Page<UserSummaryDTO> result =
+                followerService.getFollowersList(userId, order, pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        // Em ordem DESC, Bob deve vir primeiro
+        assertEquals("Bob", result.getContent().get(1).getUserName());
+        assertEquals("Alice", result.getContent().get(0).getUserName());
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findById(1);
+        verify(userRepository, times(1)).findById(3);
+        verify(followerRepository, times(1))
+                .findByUserToFollowId(eq(userId), any(Pageable.class));
+    }
+
+    @Test
+    void getFollowersList_WithValidUserIdAndNullOrder_ShouldUseDefaultSortAndReturnPage() {
+        Integer userId = 2;
+        String order = null;
+
+        User follower1 = new User();
+        follower1.setUserId(1);
+        follower1.setUserName("Alice");
+
+        User follower3 = new User();
+        follower3.setUserId(3);
+        follower3.setUserName("Bob");
+
+        Follower relation1 = new Follower();
+        relation1.setFollowerId(1);
+        relation1.setUserFollowerId(1);
+        relation1.setUserToFollowId(2);
+
+        Follower relation2 = new Follower();
+        relation2.setFollowerId(2);
+        relation2.setUserFollowerId(3);
+        relation2.setUserToFollowId(2);
+
+        List<Follower> followerRelations = new ArrayList<>();
+        followerRelations.add(relation1);
+        followerRelations.add(relation2);
+
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Follower> followersPage = new PageImpl<>(followerRelations, pageable, followerRelations.size());
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user2));
+        when(userRepository.findById(1)).thenReturn(Optional.of(follower1));
+        when(userRepository.findById(3)).thenReturn(Optional.of(follower3));
+        when(followerRepository.findByUserToFollowId(eq(userId), any(Pageable.class)))
+                .thenReturn(followersPage);
+
+        Page<UserSummaryDTO> result =
+                followerService.getFollowersList(userId, order, pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Alice", result.getContent().get(0).getUserName());
+        assertEquals("Bob", result.getContent().get(1).getUserName());
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(followerRepository, times(1))
+                .findByUserToFollowId(eq(userId), any(Pageable.class));
     }
 
     @Test
     void getFollowersList_WithNullUserId_ShouldThrowException() {
+        Pageable pageable = PageRequest.of(0, 5);
+
         BadRequestException exception = assertThrows(BadRequestException.class,
-                () -> followerService.getFollowersList(null, "name_asc"));
+                () -> followerService.getFollowersList(null, "name_asc", pageable));
 
         assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).findById(anyInt());
-        verify(followerRepository, never()).findByUserToFollowId(anyInt());
+        verify(followerRepository, never()).findByUserToFollowId(anyInt(), any(Pageable.class));
     }
 
     @Test
     void getFollowersList_WithZeroUserId_ShouldThrowException() {
+        Pageable pageable = PageRequest.of(0, 5);
+
         BadRequestException exception = assertThrows(BadRequestException.class,
-                () -> followerService.getFollowersList(0, "name_asc"));
+                () -> followerService.getFollowersList(0, "name_asc", pageable));
 
         assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).findById(anyInt());
-        verify(followerRepository, never()).findByUserToFollowId(anyInt());
+        verify(followerRepository, never()).findByUserToFollowId(anyInt(), any(Pageable.class));
     }
 
     @Test
     void getFollowersList_WithNonExistentUser_ShouldThrowException() {
+
         Integer userId = 999;
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
+        Pageable pageable = PageRequest.of(0, 5);
+
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> followerService.getFollowersList(userId, "name_asc"));
+                () -> followerService.getFollowersList(userId, "name_asc", pageable));
 
         assertEquals("User not found with id: '999'", exception.getMessage());
 
         verify(userRepository, times(1)).findById(userId);
-        verify(followerRepository, never()).findByUserToFollowId(anyInt());
+        verify(followerRepository, never()).findByUserToFollowId(anyInt(), any(Pageable.class));
     }
 
     @Test
@@ -347,15 +460,16 @@ public class FollowerServiceTest {
         String invalidOrder = "invalid_order";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user2));
-        when(followerRepository.findByUserToFollowId(userId)).thenReturn(new ArrayList<>());
+
+        Pageable pageable = PageRequest.of(0, 5);
 
         BadRequestException exception = assertThrows(BadRequestException.class,
-                () -> followerService.getFollowersList(userId, invalidOrder));
+                () -> followerService.getFollowersList(userId, invalidOrder, pageable));
 
         assertEquals("Invalid order parameter. Use 'name_asc' or 'name_desc'.", exception.getMessage());
 
         verify(userRepository, times(1)).findById(userId);
-        verify(followerRepository, times(1)).findByUserToFollowId(userId);
+        verify(followerRepository, never()).findByUserToFollowId(eq(userId), any(Pageable.class));
     }
 
     @Test
@@ -385,46 +499,153 @@ public class FollowerServiceTest {
         followedRelations.add(relation1);
         followedRelations.add(relation2);
 
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Follower> followedPage = new PageImpl<>(followedRelations, pageable, followedRelations.size());
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(user1));
-        when(followerRepository.findByUserFollowerId(userId)).thenReturn(followedRelations);
         when(userRepository.findById(2)).thenReturn(Optional.of(followed1));
         when(userRepository.findById(3)).thenReturn(Optional.of(followed3));
+        when(followerRepository.findByUserFollowerId(eq(userId), any(Pageable.class))).thenReturn(followedPage);
 
-        FollowedListResponseDTO result = followerService.getFollowedList(userId, order);
+        Page<UserSummaryDTO> result = followerService.getFollowedList(userId, order, pageable);
 
         assertNotNull(result);
-        assertEquals(userId, result.getUserId());
-        assertEquals("User 1", result.getUserName());
-        assertEquals(2, result.getFollowed().size());
-        assertEquals("Alice", result.getFollowed().get(0).getUserName()); // Alice deve vir primeiro em ordem alfabética
-        assertEquals("Bob", result.getFollowed().get(1).getUserName());
+        assertEquals(2, result.getContent().size());
+        assertEquals("Alice", result.getContent().get(0).getUserName()); // Alice deve vir primeiro em ordem alfabética
+        assertEquals("Bob", result.getContent().get(1).getUserName());
 
         verify(userRepository, times(1)).findById(userId);
-        verify(followerRepository, times(1)).findByUserFollowerId(userId);
+        verify(followerRepository, times(1)).findByUserFollowerId(eq(userId), any(Pageable.class));
         verify(userRepository, times(1)).findById(2);
         verify(userRepository, times(1)).findById(3);
+
+    }
+
+    @Test
+    void getFollowedList_WithValidUserIdAndNameDescOrder_ShouldReturnOrderedList() {
+        Integer userId = 1;
+        String order = "name_desc";
+
+        User followed1 = new User();
+        followed1.setUserId(2);
+        followed1.setUserName("Alice");
+
+        User followed3 = new User();
+        followed3.setUserId(3);
+        followed3.setUserName("Bob");
+
+        Follower relation1 = new Follower();
+        relation1.setFollowerId(1);
+        relation1.setUserFollowerId(1);
+        relation1.setUserToFollowId(2);
+
+        Follower relation2 = new Follower();
+        relation2.setFollowerId(2);
+        relation2.setUserFollowerId(1);
+        relation2.setUserToFollowId(3);
+
+        List<Follower> followedRelations = new ArrayList<>();
+        followedRelations.add(relation1);
+        followedRelations.add(relation2);
+
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Follower> followedPage = new PageImpl<>(followedRelations, pageable, followedRelations.size());
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user1));
+        when(userRepository.findById(2)).thenReturn(Optional.of(followed1));
+        when(userRepository.findById(3)).thenReturn(Optional.of(followed3));
+        when(followerRepository.findByUserFollowerId(eq(userId), any(Pageable.class)))
+                .thenReturn(followedPage);
+
+        Page<UserSummaryDTO> result =
+                followerService.getFollowedList(userId, order, pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        // Em DESC, Bob vem primeiro
+        assertEquals("Bob", result.getContent().get(1).getUserName());
+        assertEquals("Alice", result.getContent().get(0).getUserName());
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(followerRepository, times(1))
+                .findByUserFollowerId(eq(userId), any(Pageable.class));
+    }
+
+    @Test
+    void getFollowedList_WithValidUserIdAndNullOrder_ShouldUseDefaultSortAndReturnPage() {
+        Integer userId = 1;
+        String order = null;
+
+        User followed1 = new User();
+        followed1.setUserId(2);
+        followed1.setUserName("Alice");
+
+        User followed3 = new User();
+        followed3.setUserId(3);
+        followed3.setUserName("Bob");
+
+        Follower relation1 = new Follower();
+        relation1.setFollowerId(1);
+        relation1.setUserFollowerId(1);
+        relation1.setUserToFollowId(2);
+
+        Follower relation2 = new Follower();
+        relation2.setFollowerId(2);
+        relation2.setUserFollowerId(1);
+        relation2.setUserToFollowId(3);
+
+        List<Follower> followedRelations = new ArrayList<>();
+        followedRelations.add(relation1);
+        followedRelations.add(relation2);
+
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Follower> followedPage = new PageImpl<>(followedRelations, pageable, followedRelations.size());
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user1));
+        when(userRepository.findById(2)).thenReturn(Optional.of(followed1));
+        when(userRepository.findById(3)).thenReturn(Optional.of(followed3));
+        when(followerRepository.findByUserFollowerId(eq(userId), any(Pageable.class)))
+                .thenReturn(followedPage);
+
+        Page<UserSummaryDTO> result =
+                followerService.getFollowedList(userId, order, pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Alice", result.getContent().get(0).getUserName());
+        assertEquals("Bob", result.getContent().get(1).getUserName());
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(followerRepository, times(1))
+                .findByUserFollowerId(eq(userId), any(Pageable.class));
     }
 
     @Test
     void getFollowedList_WithNullUserId_ShouldThrowException() {
+
+        Pageable pageable = PageRequest.of(0, 5);
+
         BadRequestException exception = assertThrows(BadRequestException.class,
-                () -> followerService.getFollowedList(null, "name_asc"));
+                () -> followerService.getFollowedList(null, "name_asc", pageable));
 
         assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).findById(anyInt());
-        verify(followerRepository, never()).findByUserFollowerId(anyInt());
+        verify(followerRepository, never()).findByUserFollowerId(anyInt(), any(Pageable.class));
     }
 
     @Test
     void getFollowedList_WithZeroUserId_ShouldThrowException() {
+
+        Pageable pageable = PageRequest.of(0, 5);
+
         BadRequestException exception = assertThrows(BadRequestException.class,
-                () -> followerService.getFollowedList(0, "name_asc"));
+                () -> followerService.getFollowedList(0, "name_asc", pageable));
 
         assertEquals("User ID is required", exception.getMessage());
 
         verify(userRepository, never()).findById(anyInt());
-        verify(followerRepository, never()).findByUserFollowerId(anyInt());
+        verify(followerRepository, never()).findByUserFollowerId(anyInt(), any(Pageable.class));
     }
 
     @Test
@@ -432,13 +653,15 @@ public class FollowerServiceTest {
         Integer userId = 999;
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
+        Pageable pageable = PageRequest.of(0, 5);
+
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> followerService.getFollowedList(userId, "name_asc"));
+                () -> followerService.getFollowedList(userId, "name_asc", pageable));
 
         assertEquals("User not found with id: '999'", exception.getMessage());
 
         verify(userRepository, times(1)).findById(userId);
-        verify(followerRepository, never()).findByUserFollowerId(anyInt());
+        verify(followerRepository, never()).findByUserFollowerId(anyInt(), any(Pageable.class));
     }
 
     @Test
@@ -446,16 +669,17 @@ public class FollowerServiceTest {
         Integer userId = 1;
         String invalidOrder = "invalid_order";
 
+        Pageable pageable = PageRequest.of(0, 5);
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(user1));
-        when(followerRepository.findByUserFollowerId(userId)).thenReturn(new ArrayList<>());
 
         BadRequestException exception = assertThrows(BadRequestException.class,
-                () -> followerService.getFollowedList(userId, invalidOrder));
+                () -> followerService.getFollowedList(userId, invalidOrder, pageable));
 
         assertEquals("Invalid order parameter. Use 'name_asc' or 'name_desc'.", exception.getMessage());
 
         verify(userRepository, times(1)).findById(userId);
-        verify(followerRepository, times(1)).findByUserFollowerId(userId);
+        verify(followerRepository, never()).findByUserFollowerId(anyInt(), any(Pageable.class));
     }
 
 
@@ -579,38 +803,5 @@ public class FollowerServiceTest {
         verify(followerRepository, never()).findByUserFollowerIdAndUserToFollowId(anyInt(), anyInt());
         verify(followerRepository, never()).delete(any(Follower.class));
     }
-
-    @Test
-    void buildComparator_WithAllPossibleValues_ShouldReturnCorrectly() throws Exception {
-        Method buildComparatorMethod = FollowerService.class.getDeclaredMethod("buildComparator", String.class);
-        buildComparatorMethod.setAccessible(true);
-
-        Object comparatorAsc = buildComparatorMethod.invoke(followerService, "name_asc");
-        assertNotNull(comparatorAsc);
-
-        Object comparatorDesc = buildComparatorMethod.invoke(followerService, "name_desc");
-        assertNotNull(comparatorDesc);
-
-        Object comparatorInvalid = buildComparatorMethod.invoke(followerService, "invalid_order");
-        assertNull(comparatorInvalid);
-
-        Object comparatorNull = buildComparatorMethod.invoke(followerService, (Object) null);
-        assertNull(comparatorNull);
-
-        UserSummaryDTO user1 = new UserSummaryDTO(1, "Alice");
-        UserSummaryDTO user2 = new UserSummaryDTO(2, "Bob");
-
-        @SuppressWarnings("unchecked")
-        Comparator<UserSummaryDTO> ascComparator = (Comparator<UserSummaryDTO>) comparatorAsc;
-        @SuppressWarnings("unchecked")
-        Comparator<UserSummaryDTO> descComparator = (Comparator<UserSummaryDTO>) comparatorDesc;
-
-        // Alice deve vir antes de Bob em ordem ascendente
-        assertTrue(ascComparator.compare(user1, user2) < 0);
-
-        // Bob deve vir antes de Alice em ordem descendente
-        assertTrue(descComparator.compare(user1, user2) > 0);
-    }
-
 
 }
