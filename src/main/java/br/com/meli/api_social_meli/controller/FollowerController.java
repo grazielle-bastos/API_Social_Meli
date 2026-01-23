@@ -1,9 +1,6 @@
 package br.com.meli.api_social_meli.controller;
 
-import br.com.meli.api_social_meli.dto.response.FollowResponseDTO;
-import br.com.meli.api_social_meli.dto.response.FollowedListResponseDTO;
-import br.com.meli.api_social_meli.dto.response.FollowersCountResponseDTO;
-import br.com.meli.api_social_meli.dto.response.FollowersListResponseDTO;
+import br.com.meli.api_social_meli.dto.response.*;
 import br.com.meli.api_social_meli.entity.Follower;
 import br.com.meli.api_social_meli.service.FollowerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +11,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -67,7 +67,7 @@ public class FollowerController {
         return ResponseEntity.status(HttpStatus.OK).body(followersCountResponseDTO);
     }
 
-    @Operation(summary = "Lista seguidores de um usuário", description = "Retorna detalhamento de todos os seguidores do userId informado.")
+    @Operation(summary = "Lista seguidores de um usuário", description = "Retorna detalhamento de todos os seguidores do userId informado com paginação.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista retornada",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = FollowersListResponseDTO.class))),
@@ -75,15 +75,22 @@ public class FollowerController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content)
     })
     @Parameter(name = "userId", description = "ID do usuário (seller)", example = "10", required = true)
+    @Parameter(name = "order", description = "Ordenação alfabética opcional: 'name_asc' para A-Z ou 'name_desc' para Z-A", example = "name_asc")
+    @Parameter(name = "page", description = "Número da página", example = "0")
+    @Parameter(name = "size", description = "Tamanho da página", example = "5")
     @GetMapping("/{userId}/followers/list")
-    public ResponseEntity<FollowersListResponseDTO> getFollowersList(
+    public ResponseEntity<Page<UserSummaryDTO>> getFollowersList(
             @PathVariable Integer userId,
-            @RequestParam(value = "order", required = false)
-            @Parameter(description = "Ordenação alfabética opcional: 'name_asc' para A-Z ou 'name_desc' para Z-A", example = "name_asc") String order) {
-        return ResponseEntity.status(HttpStatus.OK).body(followerService.getFollowersList(userId, order));
+            @RequestParam(required = false) String order,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page <UserSummaryDTO> followersPage = followerService.getFollowersList(userId, order, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(followersPage);
     }
 
-    @Operation(summary = "Lista usuários seguidos", description = "Retorna todos os usuários que o userId segue.")
+    @Operation(summary = "Lista usuários seguidos", description = "Retorna todos os usuários que o userId segue com paginação.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista retornada",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = FollowedListResponseDTO.class))),
@@ -91,12 +98,20 @@ public class FollowerController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content)
     })
     @Parameter(name = "userId", description = "ID do usuário seguidor", example = "5", required = true)
+    @Parameter(name = "order", description = "Ordenação alfabética opcional: 'name_asc' para A-Z ou 'name_desc' para Z-A", example = "name_asc")
+    @Parameter(name = "page", description = "Número da página", example = "0")
+    @Parameter(name = "size", description = "Tamanho da página", example = "5")
     @GetMapping("/{userId}/followed/list")
-    public ResponseEntity<FollowedListResponseDTO> getFollowedList(
+    public ResponseEntity<Page<UserSummaryDTO>> getFollowedList(
             @PathVariable Integer userId,
-            @RequestParam(value = "order", required = false)
-            @Parameter(description = "Ordenação alfabética opcional: 'name_asc' para A-Z ou 'name_desc' para Z-A", example = "name_asc") String order) {
-        return ResponseEntity.status(HttpStatus.OK).body(followerService.getFollowedList(userId, order));
+            @RequestParam(required = false) String order,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserSummaryDTO> followedPage =
+                followerService.getFollowedList(userId, order, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(followedPage);
     }
 
     @Operation(
